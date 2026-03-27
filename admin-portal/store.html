@@ -16,21 +16,27 @@
     <div id="app"></div>
 
     <template id="page-template">
-      <section class="cardSection">
-        <h2 class="sectionTitle">Store</h2>
-
-        <div class="emptyState" id="storeEmpty">
-          <div class="emptyState__content">
-            <img class="emptyState__icon" src="./assets/archive.svg" alt="" />
-            <div class="emptyState__title">No Item yet</div>
-            <div class="emptyState__subtitle">Items will show here</div>
-          </div>
-
-          <button class="primaryButton" id="addItemBtn" type="button">
-            <img class="primaryButton__icon" src="./assets/plus.svg" alt="" />
+      <div class="panelHeader">
+        <div class="showingLabel">Showing: <strong>All Items</strong></div>
+        <div class="dropdownWrapper">
+          <button class="adminActionBtn" id="addItemBtnTop" type="button">
+            <img class="adminActionBtn__icon" src="./assets/plus.svg" alt="" />
             <span>Add New Item</span>
           </button>
+          <div class="dropdownMenu" id="addItemDropdown">
+            <button class="dropdownItem" id="addItemSingleBtn" type="button">Single</button>
+            <button class="dropdownItem" id="addItemBulkBtn" type="button">Bulk Upload</button>
+          </div>
         </div>
+      </div>
+
+      <section class="cardSection cardSection--large" id="storeEmpty">
+        <div class="emptyState__content">
+          <img class="emptyState__icon" src="./assets/archive.svg" alt="" />
+          <div class="emptyState__title">No Item yet</div>
+          <div class="emptyState__subtitle">Items will show here</div>
+        </div>
+      </section>
 
         <div class="storeFilled isHidden" id="storeFilled">
           <div class="tableFilterBar">
@@ -55,27 +61,26 @@
               <div>Date</div>
               <div>Actions</div>
             </div>
-            <div class="dataTable__row">
+            <div class="dataTable__row dataTable__row--clickable">
               <div>Sample item</div>
               <div>General</div>
               <div>12</div>
               <div>₦ 0</div>
-              <div>Active</div>
+              <div><span class="statusBadge statusBadge--active">Active</span></div>
               <div>01/10/2025</div>
-              <div><a class="secondaryButton" href="./order-list.html?state=filled">View Orders</a></div>
+              <div class="store-actions-placeholder"></div>
             </div>
-            <div class="dataTable__row">
+            <div class="dataTable__row dataTable__row--clickable">
               <div>Sample item</div>
               <div>General</div>
               <div>5</div>
               <div>₦ 0</div>
-              <div>Active</div>
+              <div><span class="statusBadge statusBadge--active">Active</span></div>
               <div>02/10/2025</div>
-              <div><button class="miniIconButton" type="button" aria-label="More"><img src="./assets/arrow-right.svg" alt="" /></button></div>
+              <div class="store-actions-placeholder"></div>
             </div>
           </div>
         </div>
-      </section>
     </template>
 
     <script src="./ui.js"></script>
@@ -92,38 +97,121 @@
         filled?.classList.remove("isHidden");
       }
 
-      document.getElementById("addItemBtn")?.addEventListener("click", () => {
+      const addItemBtnTop = document.getElementById("addItemBtnTop");
+      const addItemDropdown = document.getElementById("addItemDropdown");
+
+      // Toggle dropdown menu
+      addItemBtnTop?.addEventListener("click", (e) => {
+        e.stopPropagation(); // prevent document click from firing immediately
+        addItemBtnTop.classList.toggle("adminActionBtn--active");
+        addItemDropdown?.classList.toggle("dropdownMenu--open");
+      });
+
+      // Close dropdown when outside is clicked
+      document.addEventListener("click", (e) => {
+        if (!addItemBtnTop?.contains(e.target) && !addItemDropdown?.contains(e.target)) {
+          addItemBtnTop?.classList.remove("adminActionBtn--active");
+          addItemDropdown?.classList.remove("dropdownMenu--open");
+        }
+      });
+
+      // Bulk Upload Action
+      document.getElementById("addItemBulkBtn")?.addEventListener("click", () => {
+        addItemBtnTop?.classList.remove("adminActionBtn--active");
+        addItemDropdown?.classList.remove("dropdownMenu--open");
         openUploadBulkModal({ 
-          onSubmit: () => {
-            showSuccessToast("Submitted Successfully");
-            
-            const empty = document.getElementById("storeEmpty");
-            const filled = document.getElementById("storeFilled");
-            const table = document.querySelector("#storeFilled .dataTable");
-            
-            if (empty && filled) {
-              empty.classList.add("isHidden");
-              filled.classList.remove("isHidden");
-            }
-            
-            if (table) {
-              const newRow = document.createElement("div");
-              newRow.className = "dataTable__row";
-              const today = new Date().toLocaleDateString("en-GB");
-              
-              newRow.innerHTML = `
-                <div>Uploaded Item</div>
-                <div>General</div>
-                <div>10</div>
-                <div>₦ 0</div>
-                <div>Active</div>
-                <div>${today}</div>
-                <div><button class="miniIconButton" type="button" aria-label="More"><img src="./assets/arrow-right.svg" alt="" /></button></div>
-              `;
-              table.appendChild(newRow);
-            }
-          }
+          onSubmit: handleItemSubmit
         });
+      });
+
+      // Single Item Action
+      document.getElementById("addItemSingleBtn")?.addEventListener("click", () => {
+        addItemBtnTop?.classList.remove("adminActionBtn--active");
+        addItemDropdown?.classList.remove("dropdownMenu--open");
+        openAddSingleItemModal({
+          onSubmit: handleItemSubmit
+        });
+      });
+
+      function handleItemSubmit(data) {
+        showSuccessToast("Submitted Successfully");
+        
+        const empty = document.getElementById("storeEmpty");
+        const filled = document.getElementById("storeFilled");
+        const table = document.querySelector("#storeFilled .dataTable");
+        
+        if (empty && filled) {
+          empty.classList.add("isHidden");
+          filled.classList.remove("isHidden");
+        }
+        
+        if (table) {
+          const newRow = document.createElement("div");
+          newRow.className = "dataTable__row dataTable__row--clickable";
+          // We rely on delegation now
+          const today = new Date().toLocaleDateString("en-GB");
+          
+          newRow.innerHTML = `
+            <div>${escapeHtml(data?.itemName || "Uploaded Item")}</div>
+            <div>General</div>
+            <div>10</div>
+            <div>₦ ${data?.amountNaira || "0"}</div>
+            <div><span class="statusBadge statusBadge--active">Active</span></div>
+            <div>${today}</div>
+            <div>${renderTableActions(["View Item", "Edit Item", "Deactivate", "Delete Item"])}</div>
+          `;
+          table.appendChild(newRow);
+        }
+      }
+
+      // Initialize sample row actions
+      document.querySelectorAll(".store-actions-placeholder").forEach(el => {
+        el.innerHTML = renderTableActions(["View Item", "Edit Item", "Deactivate", "Delete Item"]);
+      });
+
+      // Unified Table Delegation (Modals & Actions)
+      document.querySelector(".dataTable")?.addEventListener("click", (e) => {
+        const actionItem = e.target.closest(".rowActionItem");
+        const dotsInner = e.target.closest(".tableActionDots");
+        const row = e.target.closest(".dataTable__row");
+
+        if (actionItem) {
+          const action = actionItem.dataset.action;
+          const itemName = row.querySelector("div:first-child").textContent;
+          if (action === "view-item") {
+            const price = row.querySelector("div:nth-child(4)").textContent.replace("₦ ", "");
+            openViewItemModal({
+              name: itemName,
+              points: (parseInt(price.replace(/,/g, '')) / 10).toString() + "PT",
+              image: "https://images.unsplash.com/photo-1555507036-ab1f40ce88cb?auto=format&fit=crop&q=80&w=400",
+              description: "A premium product listing from the 3Line Store admin portal."
+            });
+          } else if (action === "delete-item" || action === "deactivate") {
+            const isDeactivate = action === "deactivate";
+            openDeleteConfirmModal({
+              title: isDeactivate ? "Deactivate Item" : "Delete Item",
+              message: `Are you sure you want to ${isDeactivate ? "deactivate" : "delete"} "${itemName}"?`,
+              onConfirm: () => {
+                deleteRow(actionItem, "storeEmpty", "storeFilled");
+                showToast(`Item ${isDeactivate ? "deactivated" : "deleted"} successfully`, "success");
+              }
+            });
+          }
+          return;
+        }
+
+        if (dotsInner) return; // toggleRowMenu handled by inline onclick
+
+        if (row && row.classList.contains("dataTable__row--clickable")) {
+          const itemName = row.querySelector("div:first-child").textContent;
+          const price = row.querySelector("div:nth-child(4)").textContent.replace("₦ ", "");
+          openViewItemModal({
+            name: itemName,
+            points: (parseInt(price.replace(/,/g, '')) / 10).toString() + "PT",
+            image: "https://images.unsplash.com/photo-1555507036-ab1f40ce88cb?auto=format&fit=crop&q=80&w=400",
+            description: "A premium product listing from the 3Line Store admin portal."
+          });
+        }
       });
     </script>
   </body>

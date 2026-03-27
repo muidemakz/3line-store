@@ -16,52 +16,50 @@
     <div id="app"></div>
 
     <template id="page-template">
-      <section class="cardSection">
-        <h2 class="sectionTitle">Suggestions</h2>
+      <div class="panelHeader">
+        <div class="showingLabel">Showing: <strong>All Suggestions</strong></div>
+      </div>
 
-        <div class="emptyState" id="suggestionsEmpty">
-          <div class="emptyState__content">
-            <img class="emptyState__icon" src="./assets/archive.svg" alt="" />
-            <div class="emptyState__title">No Suggestion yet</div>
-            <div class="emptyState__subtitle">Suggestions will show here</div>
-          </div>
-        </div>
-
-        <div class="suggestionsFilled isHidden" id="suggestionsFilled">
-          <div class="tableFilterBar">
-            <div class="tableFilterBar__left">
-              <div class="tableSearch">
-                <span class="tableSearch__icon" aria-hidden="true">⌕</span>
-                <input class="tableSearch__input" placeholder="Search title" />
-              </div>
-              <button class="tableFilterBtn" type="button">Date <span aria-hidden="true">▾</span></button>
-              <button class="tableApplyBtn" type="button">Apply</button>
-            </div>
-            <button class="tableExportBtn" type="button">Export</button>
-          </div>
-
-          <div class="dataTable">
-            <div class="dataTable__head">
-              <div>Title</div>
-              <div>Submitted by</div>
-              <div>Progress</div>
-              <div>Status</div>
-              <div>Date</div>
-              <div>Actions</div>
-              <div></div>
-            </div>
-            <div class="dataTable__row">
-              <div>Suggestion</div>
-              <div>Nasco</div>
-              <div>—</div>
-              <div>Open</div>
-              <div>01/10/2025</div>
-              <div><button class="secondaryButton" type="button">View</button></div>
-              <div></div>
-            </div>
-          </div>
+      <section class="cardSection cardSection--large" id="suggestionsEmpty">
+        <div class="emptyState__content">
+          <img class="emptyState__icon" src="./assets/archive.svg" alt="" />
+          <div class="emptyState__title">No Suggestion yet</div>
+          <div class="emptyState__subtitle">Suggestions will show here</div>
         </div>
       </section>
+
+      <div class="suggestionsFilled isHidden" id="suggestionsFilled">
+        <div class="tableFilterBar">
+          <div class="tableFilterBar__left">
+            <div class="tableSearch">
+              <span class="tableSearch__icon" aria-hidden="true">⌕</span>
+              <input class="tableSearch__input" placeholder="Search title" />
+            </div>
+            <button class="tableFilterBtn" type="button">Date <span aria-hidden="true">▾</span></button>
+            <button class="tableApplyBtn" type="button">Apply</button>
+          </div>
+          <button class="tableExportBtn" type="button">Export</button>
+        </div>
+
+        <div class="dataTable">
+          <div class="dataTable__head">
+            <div>Title</div>
+            <div>Submitted by</div>
+            <div>Progress</div>
+            <div>Status</div>
+            <div>Date</div>
+            <div>Actions</div>
+          </div>
+          <div class="dataTable__row dataTable__row--clickable">
+            <div>Milo refill</div>
+            <div>Nasco</div>
+            <div>—</div>
+            <div><span class="statusBadge statusBadge--active">Open</span></div>
+            <div>01/10/2025</div>
+            <div class="suggestions-actions-placeholder"></div>
+          </div>
+        </div>
+      </div>
     </template>
 
     <script src="./ui.js"></script>
@@ -77,6 +75,44 @@
         empty?.classList.add("isHidden");
         filled?.classList.remove("isHidden");
       }
+
+      // Initialize sample row actions
+      document.querySelectorAll(".suggestions-actions-placeholder").forEach(el => {
+        el.innerHTML = renderTableActions(["View Suggestion", "Approve", "Decline", "Delete"]);
+      });
+
+      // Unified Table Delegation (Navigation & Actions)
+      document.querySelector(".dataTable")?.addEventListener("click", (e) => {
+        const actionItem = e.target.closest(".rowActionItem");
+        const dotsInner = e.target.closest(".tableActionDots");
+        const row = e.target.closest(".dataTable__row");
+
+        if (actionItem) {
+          const action = actionItem.dataset.action;
+          const suggestionName = row?.querySelector("div:first-child")?.textContent || "Suggestion";
+          
+          if (action === "view-suggestion") {
+            location.href = './suggestion-details.html';
+          } else if (action === "delete" || action === "decline") {
+            const isDecline = action === "decline";
+            openDeleteConfirmModal({
+              title: isDecline ? "Decline Suggestion" : "Delete Suggestion",
+              message: `Are you sure you want to ${isDecline ? "decline" : "delete"} "${suggestionName}"?`,
+              onConfirm: () => {
+                deleteRow(actionItem, "suggestionsEmpty", "suggestionsFilled");
+                showToast(`Suggestion ${isDecline ? "declined" : "deleted"} successfully`, "success");
+              }
+            });
+          }
+          return;
+        }
+
+        if (dotsInner) return; // toggleRowMenu handled by inline onclick
+
+        if (row && row.classList.contains("dataTable__row--clickable")) {
+          location.href = './suggestion-details.html';
+        }
+      });
     </script>
   </body>
 </html>

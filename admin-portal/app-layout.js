@@ -26,7 +26,7 @@ function renderDashboardShell({ activeKey, pageTitle }) {
   const navHtml = NAV_ITEMS.map((item) => {
     const active = item.key === activeKey;
     return `
-      <a class="navItem ${active ? "navItem--active" : ""}" href="${item.href}">
+      <a class="navItem ${active ? "navItem--active" : ""}" href="${item.href}" onclick="if(window.innerWidth <= 1024) closeSidebar();">
         <img class="navItem__icon" src="${item.icon}" alt="" />
         <span class="navItem__label">${escapeHtml(item.label)}</span>
       </a>
@@ -34,8 +34,15 @@ function renderDashboardShell({ activeKey, pageTitle }) {
   }).join("");
 
   app.innerHTML = `
+    <div class="sidebarBackdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
     <div class="app">
-      <aside class="sidebar" aria-label="Sidebar">
+      <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+        <button class="sidebar__close" id="sidebarClose" type="button" aria-label="Close sidebar" onclick="closeSidebar()">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+
         <div class="sidebar__logo" aria-label="3Line Store">
           <div class="sidebar__logoText">3Line Store</div>
         </div>
@@ -67,12 +74,19 @@ function renderDashboardShell({ activeKey, pageTitle }) {
 
       <main class="main" aria-label="Main">
         <header class="topHeader">
-          <div class="breadcrumb" aria-label="Breadcrumb">
-            <div class="breadcrumb__start" aria-hidden="true">
-              <img class="breadcrumb__home" src="./assets/home-smile-alt.svg" alt="" />
-              <img class="breadcrumb__chev" src="./assets/chevron-right-alt.svg" alt="" />
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <button class="menuToggle" id="menuToggle" type="button" aria-label="Open sidebar" onclick="toggleSidebar()">
+               <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+                 <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+               </svg>
+            </button>
+            <div class="breadcrumb" aria-label="Breadcrumb">
+              <div class="breadcrumb__start" aria-hidden="true">
+                <img class="breadcrumb__home" src="./assets/home-smile-alt.svg" alt="" />
+                <img class="breadcrumb__chev" src="./assets/chevron-right-alt.svg" alt="" />
+              </div>
+              <div class="breadcrumb__current">${escapeHtml(pageTitle)}</div>
             </div>
-            <div class="breadcrumb__current">${escapeHtml(pageTitle)}</div>
           </div>
 
           <button class="iconButton" type="button" aria-label="Notifications">
@@ -94,4 +108,26 @@ function renderDashboardShell({ activeKey, pageTitle }) {
     <div id="toast-root" class="toastRoot"></div>
   `;
 }
+
+// Sidebar Logic
+function toggleSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const backdrop = document.getElementById("sidebarBackdrop");
+  if (!sidebar || !backdrop) return;
+
+  sidebar.classList.toggle("sidebar--open");
+  backdrop.classList.toggle("sidebarBackdrop--visible");
+}
+
+function closeSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const backdrop = document.getElementById("sidebarBackdrop");
+  if (!sidebar || !backdrop) return;
+
+  sidebar.classList.remove("sidebar--open");
+  backdrop.classList.remove("sidebarBackdrop--visible");
+}
+
+window.toggleSidebar = toggleSidebar;
+window.closeSidebar = closeSidebar;
 

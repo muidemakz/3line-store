@@ -16,22 +16,173 @@
     <div id="app"></div>
 
     <template id="page-template">
-      <section class="cardSection">
-        <h2 class="sectionTitle">Users</h2>
-        <div class="emptyState">
-          <div class="emptyState__content">
-            <img class="emptyState__icon" src="./assets/archive.svg" alt="" />
-            <div class="emptyState__title">No User yet</div>
-            <div class="emptyState__subtitle">Users will show here</div>
+      <div class="panelHeader">
+        <div class="showingLabel">Showing: <strong>All Users</strong></div>
+        <div class="dropdownWrapper">
+          <button class="adminActionBtn" id="addUserBtnTop" type="button">
+            <img class="adminActionBtn__icon" src="./assets/plus.svg" alt="" />
+            <span>Add New User</span>
+          </button>
+          <div class="dropdownMenu" id="addUserDropdown">
+            <button class="dropdownItem" id="addUserSingleBtn" type="button">Single</button>
+            <button class="dropdownItem" id="addUserBulkBtn" type="button">Bulk Upload</button>
           </div>
         </div>
+      </div>
+
+      <section class="cardSection cardSection--large" id="usersEmpty">
+        <div class="emptyState__content">
+          <img class="emptyState__icon" src="./assets/archive.svg" alt="" />
+          <div class="emptyState__title">No User yet</div>
+          <div class="emptyState__subtitle">Users will show here</div>
+        </div>
       </section>
+
+      <div class="usersFilled isHidden" id="usersFilled">
+        <div class="tableFilterBar">
+          <div class="tableFilterBar__left">
+            <div class="tableSearch">
+              <span class="tableSearch__icon" aria-hidden="true">⌕</span>
+              <input class="tableSearch__input" placeholder="Search name" />
+            </div>
+            <button class="tableFilterBtn" type="button">Type <span aria-hidden="true">▾</span></button>
+            <button class="tableApplyBtn" type="button">Apply</button>
+          </div>
+          <button class="tableExportBtn" type="button">Export</button>
+        </div>
+
+        <div class="dataTable">
+          <div class="dataTable__head">
+            <div>User's Name</div>
+            <div>Email</div>
+            <div>User Type</div>
+            <div>Grade Level</div>
+            <div>Date Added</div>
+            <div>Actions</div>
+          </div>
+          <div class="dataTable__row dataTable__row--clickable">
+            <div>James Oyeniyi</div>
+            <div>jamesomoniyi@mail.com</div>
+            <div>User</div>
+            <div>Level 3</div>
+            <div>01/10/2025</div>
+            <div id="sample-actions-placeholder"></div>
+          </div>
+        </div>
+      </div>
     </template>
 
     <script src="./ui.js"></script>
     <script src="./app-layout.js"></script>
     <script>
       renderDashboardShell({ activeKey: "users", pageTitle: "Users" });
+
+      const addUserBtnTop = document.getElementById("addUserBtnTop");
+      const addUserDropdown = document.getElementById("addUserDropdown");
+
+      // Toggle dropdown menu
+      addUserBtnTop?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        addUserBtnTop.classList.toggle("adminActionBtn--active");
+        addUserDropdown?.classList.toggle("dropdownMenu--open");
+      });
+
+      // Close dropdown when outside is clicked
+      document.addEventListener("click", (e) => {
+        if (!addUserBtnTop?.contains(e.target) && !addUserDropdown?.contains(e.target)) {
+          addUserBtnTop?.classList.remove("adminActionBtn--active");
+          addUserDropdown?.classList.remove("dropdownMenu--open");
+        }
+      });
+
+      // Bulk Upload Action
+      document.getElementById("addUserBulkBtn")?.addEventListener("click", () => {
+        addUserBtnTop?.classList.remove("adminActionBtn--active");
+        addUserDropdown?.classList.remove("dropdownMenu--open");
+        openUploadBulkModal({ 
+          onSubmit: () => {
+            showSuccessToast("Submitted Successfully");
+          }
+        });
+      });
+
+      // Single User Action
+      document.getElementById("addUserSingleBtn")?.addEventListener("click", () => {
+        addUserBtnTop?.classList.remove("adminActionBtn--active");
+        addUserDropdown?.classList.remove("dropdownMenu--open");
+        openAddSingleUserModal({
+          onSubmit: handleUserSubmit
+        });
+      });
+
+      function handleUserSubmit(data) {
+        showSuccessToast("Submitted Successfully");
+        
+        const empty = document.getElementById("usersEmpty");
+        const filled = document.getElementById("usersFilled");
+        const table = document.querySelector("#usersFilled .dataTable");
+        
+        if (empty && filled) {
+          empty.classList.add("isHidden");
+          filled.classList.remove("isHidden");
+        }
+        
+        if (table && data) {
+          const newRow = document.createElement("div");
+          newRow.className = "dataTable__row dataTable__row--clickable";
+          // We rely on delegation now
+          const today = new Date().toLocaleDateString("en-GB");
+          
+          newRow.innerHTML = `
+            <div>${escapeHtml(data.userName || "New User")}</div>
+            <div>${escapeHtml(data.userEmail || "-")}</div>
+            <div>${escapeHtml(data.userType || "User")}</div>
+            <div>${escapeHtml(data.gradeLevel || "-")}</div>
+            <div>${today}</div>
+            <div>${renderTableActions(["View User", "Edit User", "Deactivate", "Delete User"])}</div>
+          `;
+          table.appendChild(newRow);
+        }
+      }
+
+      // Initialize sample row actions
+      const sampleActionsPlaceholder = document.getElementById("sample-actions-placeholder");
+      if (sampleActionsPlaceholder) {
+        sampleActionsPlaceholder.innerHTML = renderTableActions(["View User", "Edit User", "Deactivate", "Delete User"]);
+      }
+
+      // Unified Table Delegation (Navigation & Actions)
+      document.querySelector(".dataTable")?.addEventListener("click", (e) => {
+        const actionItem = e.target.closest(".rowActionItem");
+        const dotsInner = e.target.closest(".tableActionDots");
+        const row = e.target.closest(".dataTable__row");
+
+        if (actionItem) {
+          const action = actionItem.dataset.action;
+          const userName = row?.querySelector("div:first-child")?.textContent || "User";
+          
+          if (action === "view-user") {
+            location.href = './user-details.html';
+          } else if (action === "delete-user" || action === "deactivate") {
+            const isDeactivate = action === "deactivate";
+            openDeleteConfirmModal({
+              title: isDeactivate ? "Deactivate User" : "Delete User",
+              message: `Are you sure you want to ${isDeactivate ? "deactivate" : "delete"} "${userName}"?`,
+              onConfirm: () => {
+                deleteRow(actionItem, "usersEmpty", "usersFilled");
+                showToast(`User ${isDeactivate ? "deactivated" : "deleted"} successfully`, "success");
+              }
+            });
+          }
+          return;
+        }
+
+        if (dotsInner) return; // toggleRowMenu handled by inline onclick
+
+        if (row && row.classList.contains("dataTable__row--clickable")) {
+          location.href = './user-details.html';
+        }
+      });
     </script>
   </body>
 </html>

@@ -13,6 +13,42 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function toggleRowMenu(el) {
+  const menu = el.querySelector(".rowActionMenu");
+  if (!menu) return;
+  
+  // Close all other open menus first
+  document.querySelectorAll(".rowActionMenu--open").forEach(op => {
+    if (op !== menu) op.classList.remove("rowActionMenu--open");
+  });
+  
+  menu.classList.toggle("rowActionMenu--open");
+  
+  // Close menu when clicking outside
+  const closeMenu = (e) => {
+    if (!el.contains(e.target)) {
+      menu.classList.remove("rowActionMenu--open");
+      document.removeEventListener("click", closeMenu);
+    }
+  };
+  document.addEventListener("click", closeMenu);
+}
+
+function renderTableActions(options = ["View Item", "Edit Item", "Deactivate", "Delete Item"]) {
+  return `
+    <div class="tableActionDots" onclick="toggleRowMenu(this)">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+        <path d="M12 13a1 1 0 100-2 1 1 0 000 2zm0-6a1 1 0 100-2 1 1 0 000 2zm0 12a1 1 0 100-2 1 1 0 000 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
+      <div class="rowActionMenu">
+        ${options.map(opt => `
+          <div class="rowActionItem ${opt.toLowerCase().includes('delete') ? 'rowActionItem--danger' : ''}" data-action="${opt.toLowerCase().replace(/\s+/g, '-')}">${opt}</div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
 function showSuccessToast(message = "Submitted Successfully") {
   const { toastRoot } = ensureRoots();
   if (!toastRoot) return;
@@ -103,6 +139,171 @@ function openDrawer(html) {
 function closeModal() {
   const { modalRoot } = ensureRoots();
   modalRoot?.replaceChildren();
+}
+
+/**
+ * Removes a table row and optionally toggles empty state if table is empty
+ */
+function deleteRow(el, emptyId, filledId) {
+  const row = el.closest(".dataTable__row");
+  const table = row?.parentElement;
+  if (row) row.remove();
+  
+  // If table has only the header left (or no rows), show empty state
+  if (table && table.querySelectorAll(".dataTable__row").length === 0) {
+    const empty = document.getElementById(emptyId);
+    const filled = document.getElementById(filledId);
+    if (empty && filled) {
+      empty.classList.remove("isHidden");
+      filled.classList.add("isHidden");
+    }
+  }
+}
+
+/**
+ * PREMIUM MODALS & TOASTS (Figma Sync)
+ */
+
+/**
+ * Opens a premium modal with either centered or right-aligned (drawer) layout
+ */
+function openPremiumModal(html, { isDrawer = false } = {}) {
+  const { modalRoot } = ensureRoots();
+  if (!modalRoot) return;
+
+  const overlayClass = isDrawer ? "premiumModalOverlay premiumModalOverlay--right" : "premiumModalOverlay";
+  const cardClass = isDrawer ? "premiumModalCard premiumModalCard--drawer" : "premiumModalCard";
+
+  modalRoot.innerHTML = `
+    <div class="${overlayClass}">
+      <div class="${cardClass}">
+        ${html}
+      </div>
+    </div>
+  `;
+
+  // Close on overlay click
+  const overlay = modalRoot.querySelector(".premiumModalOverlay");
+  overlay?.addEventListener("click", (e) => {
+    if (e.target === overlay) closePremiumModal();
+  });
+
+  // Close on data-premium-modal-close
+  modalRoot.querySelectorAll("[data-premium-modal-close]").forEach(btn => {
+    btn.addEventListener("click", closePremiumModal);
+  });
+}
+
+function closePremiumModal() {
+  const { modalRoot } = ensureRoots();
+  modalRoot?.replaceChildren();
+}
+
+/**
+ * Opens the high-fidelity Item Details modal (Right Aligned)
+ */
+function openViewItemModal(data) {
+  const { 
+    name = "Indomie | Noodles 20X45g | Carton",
+    points = "100PT",
+    image = "https://images.unsplash.com/photo-1555507036-ab1f40ce88cb?auto=format&fit=crop&q=80&w=400",
+    description = "A product of Dufil Prima Foods"
+  } = data || {};
+
+  openPremiumModal(`
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 24px;">
+      <button class="modalHeader__close" type="button" data-premium-modal-close aria-label="Close">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+          <path d="M18 6L6 18M6 6l12 12" stroke="#667085" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+    
+    <div class="itemDetailHero">
+      <div class="itemDetailTitleRow">
+        <div class="itemDetailTitle">${name}</div>
+        <div class="itemDetailBadge">${points}</div>
+      </div>
+      <img src="${image}" alt="${name}" class="itemDetailImage" />
+    </div>
+
+    <div class="itemDetailSection">
+      <div class="itemDetailLabel">Description:</div>
+      <div class="itemDetailText">${description}</div>
+    </div>
+
+    <div class="itemModalFooter">
+      <button class="secondaryButton" type="button" style="width: 100%; height: 48px;">Edit</button>
+      <div class="itemModalSplit">
+        <button class="secondaryButton" type="button" style="height: 44px; font-size: 14px;">Deactivate</button>
+        <button class="secondaryButton" type="button" style="height: 44px; font-size: 14px; background: #FEF3F2; border-color: #FDA29B; color: #D92D20;">Delete Item</button>
+      </div>
+    </div>
+  `, { isDrawer: true });
+}
+
+/**
+ * Opens the premium Delete Confirmation modal (Centered)
+ */
+function openDeleteConfirmModal({ title = "Delete Item", message = "Are you sure you want to delete this item?", onConfirm }) {
+  openPremiumModal(`
+    <div class="confirmIconWrap">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+    </div>
+    <div class="confirmTitle">${title}</div>
+    <div class="confirmText">${message}</div>
+    <div class="confirmActions">
+      <button class="secondaryButton" type="button" data-premium-modal-close>No, I Don't</button>
+      <button class="authButton" type="button" id="confirmYesBtn" style="background: #00002A; border-color: #00002A; color: #fff;">Yes, I Do</button>
+    </div>
+  `);
+
+  document.getElementById("confirmYesBtn")?.addEventListener("click", () => {
+    onConfirm?.();
+    closePremiumModal();
+  });
+}
+
+/**
+ * Shows a pill-shaped toast notification
+ */
+function showToast(message, type = "success") {
+  const container = document.querySelector(".toastContainer") || (() => {
+    const c = document.createElement("div");
+    c.className = "toastContainer";
+    document.body.appendChild(c);
+    return c;
+  })();
+
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  
+  const icon = type === "success" 
+    ? `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" /></svg>`
+    : `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" /></svg>`;
+
+  toast.innerHTML = `
+    <div class="toastIcon">${icon}</div>
+    <div class="toastText">${message}</div>
+    <button class="toastClose" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#667085" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" /></svg>
+    </button>
+  `;
+
+  container.appendChild(toast);
+
+  const closeItems = () => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(-10px)";
+    setTimeout(() => toast.remove(), 300);
+  };
+
+  toast.querySelector(".toastClose").onclick = closeItems;
+  setTimeout(closeItems, 4000);
 }
 
 function openAddSessionModal({ onSubmit } = {}) {
@@ -263,6 +464,237 @@ function openUploadBulkModal({ onSubmit } = {}) {
     sync();
     if (submit?.disabled) return;
     onSubmit?.();
+    closeModal();
+  });
+}
+
+function openAddSingleUserModal({ onSubmit } = {}) {
+  openModal(`
+    <header class="modalHeader">
+      <div class="modalHeader__titleRow">
+        <span class="modalHeader__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="#667085" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M9 22V12h6v10" stroke="#667085" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
+        <div class="modalHeader__titles">
+          <div class="modalHeader__title">Add New User</div>
+        </div>
+        <button class="modalHeader__close" type="button" data-modal-close aria-label="Close">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="#667085" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+      <div class="modalHeader__desc">Provide the new user details you would like to add below.</div>
+    </header>
+
+    <form class="modalBody" id="addSingleUserForm" novalidate>
+      <div class="fieldGroup">
+        <label class="field">
+          <span class="field__label">User's Name</span>
+          <input class="field__input" name="userName" placeholder="e.g James Oyeniyi" required />
+        </label>
+        <label class="field">
+          <span class="field__label">User's Email</span>
+          <input class="field__input" type="email" name="userEmail" placeholder="jamesomoniyi@mail.com" required />
+        </label>
+        <label class="field">
+          <span class="field__label">User Type</span>
+          <div class="field__inputWrap">
+            <select class="field__input" name="userType" required style="appearance: none;">
+              <option value="" disabled selected>Select An Option</option>
+              <option value="User">User</option>
+              <option value="Admin">Admin</option>
+            </select>
+            <span class="field__icon" style="pointer-events:none;" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+                <path d="M6 9l6 6 6-6" stroke="#667085" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </div>
+        </label>
+        <label class="field">
+          <span class="field__label">Grade Level</span>
+          <div class="field__inputWrap">
+            <select class="field__input" name="gradeLevel" required style="appearance: none;">
+              <option value="" disabled selected>Select An Option</option>
+              <option value="Level 1">Level 1</option>
+              <option value="Level 2">Level 2</option>
+              <option value="Level 3">Level 3</option>
+            </select>
+            <span class="field__icon" style="pointer-events:none;" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+                <path d="M6 9l6 6 6-6" stroke="#667085" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </div>
+        </label>
+      </div>
+
+      <div class="modalActions" style="justify-content: center; gap: 12px; margin-top: 24px;">
+        <button class="secondaryButton" type="button" data-modal-close style="flex:1;">Cancel</button>
+        <button class="authButton" id="userSubmitBtn" type="submit" disabled style="flex:1; background-color: #00002A; border-color: #00002A; color: #fff;">Create New</button>
+      </div>
+    </form>
+  `);
+
+  const form = document.getElementById("addSingleUserForm");
+  const submit = document.getElementById("userSubmitBtn");
+  const inputs = form?.querySelectorAll("input[required], select[required]") ?? [];
+
+  function sync() {
+    const ok = Array.from(inputs).every((i) => i.value.trim().length > 0);
+    if (!submit) return;
+    submit.disabled = !ok;
+    submit.style.backgroundColor = ok ? "#00002A" : "#d5d7da";
+    submit.style.borderColor = ok ? "#00002A" : "#d5d7da";
+  }
+
+  inputs.forEach((i) => {
+    i.addEventListener("input", sync);
+    i.addEventListener("change", sync);
+  });
+  sync();
+
+  form?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    sync();
+    if (submit?.disabled) return;
+    onSubmit?.(Object.fromEntries(new FormData(form)));
+    closeModal();
+  });
+}
+
+function openAddSingleItemModal({ onSubmit } = {}) {
+  openModal(`
+    <header class="modalHeader">
+      <div class="modalHeader__titleRow">
+        <span class="modalHeader__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="#667085" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M9 22V12h6v10" stroke="#667085" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
+        <div class="modalHeader__titles">
+          <div class="modalHeader__title">Add New Item</div>
+        </div>
+        <button class="modalHeader__close" type="button" data-modal-close aria-label="Close">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="#667085" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+      <div class="modalHeader__desc">Share the item details you would like to list below.</div>
+    </header>
+
+    <form class="modalBody" id="addSingleItemForm" novalidate>
+      <div class="fieldGroup">
+        <label class="field">
+          <span class="field__label">Upload Image (Optional)</span>
+          <div class="imageUploadBox" id="imageUploadBox" style="width: 80px; height: 80px; border: 1px solid #EAECF0; border-radius: 8px; display: grid; place-items: center; cursor: pointer; position: relative;">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" class="imageUploadIcon">
+              <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="#475467" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <div id="imagePreview" style="position: absolute; inset: 0; background-size: cover; background-position: center; border-radius: 8px; display: none;"></div>
+            <div style="position: absolute; bottom: -8px; right: -8px; width: 24px; height: 24px; background: white; border: 1px solid #EAECF0; border-radius: 50%; display: grid; place-items: center; z-index: 2; box-shadow: 0 1px 2px rgba(16,24,40,0.05);">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none"><path d="M12 5v14m-7-7h14" stroke="#475467" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+          </div>
+        </label>
+        <label class="field">
+          <span class="field__label">Item Name</span>
+          <input class="field__input" name="itemName" placeholder="e.g Noodles 20X45g" required />
+        </label>
+        <label class="field">
+          <span class="field__label">Brand Name</span>
+          <input class="field__input" name="brandName" placeholder="e.g Indomie" required />
+        </label>
+        <label class="field">
+          <span class="field__label">Unit of Measurement</span>
+          <div class="field__inputWrap">
+            <select class="field__input" name="unit" required style="appearance: none;">
+              <option value="" disabled selected>Select an option</option>
+              <option value="Carton">Carton</option>
+              <option value="Pack">Pack</option>
+              <option value="Pieces">Pieces</option>
+            </select>
+            <span class="field__icon" style="pointer-events:none;" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+                <path d="M6 9l6 6 6-6" stroke="#667085" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </div>
+        </label>
+        <label class="field">
+          <span class="field__label">Item Description (Optional)</span>
+          <input class="field__input" name="itemDesc" placeholder="e.g 200" />
+        </label>
+
+        <div style="display: flex; gap: 16px; align-items: center; margin-top: 8px;">
+          <label class="field" style="flex: 1;">
+            <span class="field__label">Amount In Naira</span>
+            <input class="field__input" name="amountNaira" placeholder="e.g 200" type="number" required />
+          </label>
+          <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid #EAECF0; margin-top: 24px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
+              <path d="M8 7h12m0 0l-4-4m4 4l-4 4m4 6H4m0 0l4-4m-4 4l4 4" stroke="#667085" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <label class="field" style="flex: 1;">
+            <span class="field__label">Amount In points</span>
+            <div class="field__inputWrap">
+              <input class="field__input" name="amountPoints" placeholder="0" type="number" required style="background: #F9FAFB;" />
+              <span class="field__icon" style="font-size: 14px; font-weight: 500; color: #475467; right: 16px; width: auto;">PT</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="modalActions" style="justify-content: center; gap: 12px; margin-top: 24px;">
+        <button class="secondaryButton" type="button" data-modal-close style="flex:1;">Cancel</button>
+        <button class="authButton" id="itemSubmitBtn" type="submit" disabled style="flex:1; background-color: #00002A; border-color: #00002A; color: #fff;">Submit</button>
+      </div>
+    </form>
+  `);
+
+  const form = document.getElementById("addSingleItemForm");
+  const submit = document.getElementById("itemSubmitBtn");
+  const inputs = form?.querySelectorAll("input[required], select[required]") ?? [];
+  const imageUploadBox = document.getElementById("imageUploadBox");
+  const imagePreview = document.getElementById("imagePreview");
+  const imageUploadIcon = document.querySelector(".imageUploadIcon");
+
+  // Fake image upload
+  imageUploadBox?.addEventListener("click", () => {
+    // Show a dummy preview image
+    if (imagePreview) {
+      imagePreview.style.display = "block";
+      imagePreview.style.backgroundImage = "url('https://images.unsplash.com/photo-1555507036-ab1f40ce88cb?auto=format&fit=crop&q=80&w=150&h=150')";
+      if (imageUploadIcon) imageUploadIcon.style.display = "none";
+    }
+  });
+
+  function sync() {
+    const ok = Array.from(inputs).every((i) => i.value.trim().length > 0);
+    if (!submit) return;
+    submit.disabled = !ok;
+    submit.style.backgroundColor = ok ? "#00002A" : "#d5d7da";
+    submit.style.borderColor = ok ? "#00002A" : "#d5d7da";
+  }
+
+  inputs.forEach((i) => {
+    i.addEventListener("input", sync);
+    i.addEventListener("change", sync);
+  });
+  sync();
+
+  form?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    sync();
+    if (submit?.disabled) return;
+    onSubmit?.(Object.fromEntries(new FormData(form)));
     closeModal();
   });
 }
