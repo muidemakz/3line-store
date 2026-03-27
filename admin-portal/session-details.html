@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3Line Store — Session Details</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Poppins:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <template id="page-template">
+      <div class="pageBackRow">
+        <a class="pageBack" href="./sessions.html?state=filled">
+          <span aria-hidden="true">←</span>
+          <span>Back</span>
+        </a>
+      </div>
+
+      <section class="cardSection">
+        <h2 class="sectionTitle">Session: End of year</h2>
+
+        <div class="tabs">
+          <button class="tab tab--active" type="button" data-tab-target="orders">Order list</button>
+          <button class="tab" type="button" data-tab-target="shopping">Shopping list</button>
+        </div>
+
+        <div class="tabContent tabContent--active" id="tab-orders">
+          <div class="emptyState isHidden" id="ordersEmpty">
+            <div class="emptyState__content">
+              <img class="emptyState__icon" src="./assets/archive.svg" alt="" />
+              <div class="emptyState__title">No Order yet</div>
+              <div class="emptyState__subtitle">Orders will show here</div>
+            </div>
+          </div>
+
+          <div class="ordersFilled" id="ordersFilled">
+            <div class="tableFilterBar">
+              <div class="tableFilterBar__left">
+                <div class="tableSearch">
+                  <span class="tableSearch__icon" aria-hidden="true">⌕</span>
+                  <input class="tableSearch__input" placeholder="Search orders" />
+                </div>
+                <button class="tableFilterBtn" type="button">Date <span aria-hidden="true">▾</span></button>
+                <button class="tableApplyBtn" type="button">Apply</button>
+              </div>
+              <button class="tableExportBtn" type="button">Export</button>
+            </div>
+
+            <div class="dataTable">
+              <div class="dataTable__head">
+                <div>Order</div>
+                <div>Customer</div>
+                <div>Qty</div>
+                <div>Total</div>
+                <div>Status</div>
+                <div>Date</div>
+                <div>Actions</div>
+              </div>
+              <div class="dataTable__row">
+                <div>#0001</div>
+                <div>Olivia</div>
+                <div>2</div>
+                <div>₦ 0</div>
+                <div>Pending</div>
+                <div>01/10/2025</div>
+                <div>
+                  <button class="secondaryButton orderDetailsBtn" type="button">View</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabContent" id="tab-shopping">
+          <div class="tableFilterBar">
+            <div class="tableFilterBar__left">
+              <div class="tableSearch">
+                <span class="tableSearch__icon" aria-hidden="true">⌕</span>
+                <input class="tableSearch__input" placeholder="Search title" />
+              </div>
+              <button class="tableFilterBtn" type="button">Date <span aria-hidden="true">▾</span></button>
+              <button class="tableApplyBtn" type="button">Apply</button>
+            </div>
+            <button class="tableExportBtn" type="button">Export</button>
+          </div>
+
+          <div class="dataTable">
+            <div class="dataTable__head">
+              <div>Item</div>
+              <div>Category</div>
+              <div>Qty</div>
+              <div>Unit</div>
+              <div>Total</div>
+              <div>Date</div>
+              <div>Actions</div>
+            </div>
+            <div class="dataTable__row">
+              <div>Sample item</div>
+              <div>General</div>
+              <div>1</div>
+              <div>₦ 0</div>
+              <div>₦ 0</div>
+              <div>01/10/2025</div>
+              <div>
+                <button class="secondaryButton" type="button">Approve</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </template>
+
+    <script src="./ui.js"></script>
+    <script src="./app-layout.js"></script>
+    <script>
+      renderDashboardShell({ activeKey: "sessions", pageTitle: "Sessions" });
+
+      const tabs = document.querySelectorAll(".tab");
+      const contents = document.querySelectorAll(".tabContent");
+
+      tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+          tabs.forEach(t => t.classList.remove("tab--active"));
+          contents.forEach(c => c.classList.remove("tabContent--active"));
+          
+          tab.classList.add("tab--active");
+          const target = tab.getAttribute("data-tab-target");
+          const content = document.getElementById("tab-" + target);
+          if (content) content.classList.add("tabContent--active");
+        });
+      });
+
+      document.addEventListener("click", (e) => {
+        if (e.target.closest(".orderDetailsBtn")) {
+          openOrderDetailsDrawer();
+        }
+      });
+    </script>
+  </body>
+</html>

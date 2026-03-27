@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3Line Store — Shopping List</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Poppins:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <template id="page-template">
+      <div class="pageBackRow">
+        <a class="pageBack" href="./order-list.html?state=filled">
+          <span aria-hidden="true">←</span>
+          <span>Back</span>
+        </a>
+      </div>
+
+      <section class="cardSection">
+        <h2 class="sectionTitle">Shopping List</h2>
+
+        <div class="tableFilterBar">
+          <div class="tableFilterBar__left">
+            <div class="tableSearch">
+              <span class="tableSearch__icon" aria-hidden="true">⌕</span>
+              <input class="tableSearch__input" placeholder="Search title" />
+            </div>
+            <button class="tableFilterBtn" type="button">Date <span aria-hidden="true">▾</span></button>
+            <button class="tableApplyBtn" type="button">Apply</button>
+          </div>
+          <button class="tableExportBtn" type="button">Export</button>
+        </div>
+
+        <div class="dataTable">
+          <div class="dataTable__head">
+            <div>Item</div>
+            <div>Category</div>
+            <div>Qty</div>
+            <div>Unit</div>
+            <div>Total</div>
+            <div>Date</div>
+            <div>Actions</div>
+          </div>
+          <div class="dataTable__row">
+            <div>Sample item</div>
+            <div>General</div>
+            <div>1</div>
+            <div>₦ 0</div>
+            <div>₦ 0</div>
+            <div>01/10/2025</div>
+            <div>
+              <button class="secondaryButton" type="button">Approve</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </template>
+
+    <script src="./ui.js"></script>
+    <script src="./app-layout.js"></script>
+    <script>
+      renderDashboardShell({ activeKey: "store", pageTitle: "Store" });
+
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest(".secondaryButton");
+        if (!btn) return;
+        openOrderDetailsDrawer();
+      });
+    </script>
+  </body>
+</html>
+

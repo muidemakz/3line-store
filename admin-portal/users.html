@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3Line Store — Users</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Poppins:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <template id="page-template">
+      <section class="cardSection">
+        <h2 class="sectionTitle">Users</h2>
+        <div class="emptyState">
+          <div class="emptyState__content">
+            <img class="emptyState__icon" src="./assets/archive.svg" alt="" />
+            <div class="emptyState__title">No User yet</div>
+            <div class="emptyState__subtitle">Users will show here</div>
+          </div>
+        </div>
+      </section>
+    </template>
+
+    <script src="./ui.js"></script>
+    <script src="./app-layout.js"></script>
+    <script>
+      renderDashboardShell({ activeKey: "users", pageTitle: "Users" });
+    </script>
+  </body>
+</html>

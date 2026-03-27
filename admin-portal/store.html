@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3Line Store — Store</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Poppins:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <template id="page-template">
+      <section class="cardSection">
+        <h2 class="sectionTitle">Store</h2>
+
+        <div class="emptyState" id="storeEmpty">
+          <div class="emptyState__content">
+            <img class="emptyState__icon" src="./assets/archive.svg" alt="" />
+            <div class="emptyState__title">No Item yet</div>
+            <div class="emptyState__subtitle">Items will show here</div>
+          </div>
+
+          <button class="primaryButton" id="addItemBtn" type="button">
+            <img class="primaryButton__icon" src="./assets/plus.svg" alt="" />
+            <span>Add New Item</span>
+          </button>
+        </div>
+
+        <div class="storeFilled isHidden" id="storeFilled">
+          <div class="tableFilterBar">
+            <div class="tableFilterBar__left">
+              <div class="tableSearch">
+                <span class="tableSearch__icon" aria-hidden="true">⌕</span>
+                <input class="tableSearch__input" placeholder="Search title" />
+              </div>
+              <button class="tableFilterBtn" type="button">Date <span aria-hidden="true">▾</span></button>
+              <button class="tableApplyBtn" type="button">Apply</button>
+            </div>
+            <button class="tableExportBtn" type="button">Export</button>
+          </div>
+
+          <div class="dataTable">
+            <div class="dataTable__head">
+              <div>Title</div>
+              <div>Category</div>
+              <div>Qty</div>
+              <div>Price</div>
+              <div>Status</div>
+              <div>Date</div>
+              <div>Actions</div>
+            </div>
+            <div class="dataTable__row">
+              <div>Sample item</div>
+              <div>General</div>
+              <div>12</div>
+              <div>₦ 0</div>
+              <div>Active</div>
+              <div>01/10/2025</div>
+              <div><a class="secondaryButton" href="./order-list.html?state=filled">View Orders</a></div>
+            </div>
+            <div class="dataTable__row">
+              <div>Sample item</div>
+              <div>General</div>
+              <div>5</div>
+              <div>₦ 0</div>
+              <div>Active</div>
+              <div>02/10/2025</div>
+              <div><button class="miniIconButton" type="button" aria-label="More"><img src="./assets/arrow-right.svg" alt="" /></button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </template>
+
+    <script src="./ui.js"></script>
+    <script src="./app-layout.js"></script>
+    <script>
+      renderDashboardShell({ activeKey: "store", pageTitle: "Store" });
+
+      const params = new URLSearchParams(window.location.search);
+      const state = params.get("state");
+      const empty = document.getElementById("storeEmpty");
+      const filled = document.getElementById("storeFilled");
+      if (state === "filled") {
+        empty?.classList.add("isHidden");
+        filled?.classList.remove("isHidden");
+      }
+
+      document.getElementById("addItemBtn")?.addEventListener("click", () => {
+        openUploadBulkModal({ 
+          onSubmit: () => {
+            showSuccessToast("Submitted Successfully");
+            
+            const empty = document.getElementById("storeEmpty");
+            const filled = document.getElementById("storeFilled");
+            const table = document.querySelector("#storeFilled .dataTable");
+            
+            if (empty && filled) {
+              empty.classList.add("isHidden");
+              filled.classList.remove("isHidden");
+            }
+            
+            if (table) {
+              const newRow = document.createElement("div");
+              newRow.className = "dataTable__row";
+              const today = new Date().toLocaleDateString("en-GB");
+              
+              newRow.innerHTML = `
+                <div>Uploaded Item</div>
+                <div>General</div>
+                <div>10</div>
+                <div>₦ 0</div>
+                <div>Active</div>
+                <div>${today}</div>
+                <div><button class="miniIconButton" type="button" aria-label="More"><img src="./assets/arrow-right.svg" alt="" /></button></div>
+              `;
+              table.appendChild(newRow);
+            }
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

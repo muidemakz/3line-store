@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3Line Store — Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Poppins:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <template id="page-template">
+      <section class="cardSection">
+        <h2 class="sectionTitle">Settings</h2>
+
+        <div class="settingsStack">
+          <article class="settingCard">
+            <div class="settingCard__header">
+              <div>
+                <div class="settingCard__title">Point Configuration</div>
+                <div class="settingCard__desc">Adjust the conversion rate between Naira and Store Points.</div>
+              </div>
+              <button class="miniIconButton" type="button" aria-label="Edit" onclick="if(window.openPointConfigModal) window.openPointConfigModal();">
+                <img src="./assets/edit.svg" alt="" />
+              </button>
+            </div>
+
+            <div class="settingCard__row settingCard__row--highlight">
+              <div class="settingCard__rowLabel">Amount per 1 Point</div>
+              <div class="settingCard__rowValue" id="dash-naira-value">₦-</div>
+            </div>
+          </article>
+
+          <article class="settingCard">
+            <div class="settingCard__header">
+              <div>
+                <div class="settingCard__title">Grade Levels &amp; Points</div>
+                <div class="settingCard__desc">Manage user grade levels and their associated point allocations.</div>
+              </div>
+              <button class="miniIconButton" type="button" aria-label="Edit" onclick="if(window.openGradeSettingsModal) window.openGradeSettingsModal();">
+                <img src="./assets/edit.svg" alt="" />
+              </button>
+            </div>
+
+            <div class="settingCard__bigNumber" id="dash-grade-count">0</div>
+          </article>
+        </div>
+      </section>
+    </template>
+
+    <script src="./ui.js"></script>
+    <script src="./app-layout.js"></script>
+    <script>
+      renderDashboardShell({ activeKey: "settings", pageTitle: "Settings" });
+    </script>
+  </body>
+</html>
