@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Table, Dropdown } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 
+import PanelHeader from '@/components/common/PanelHeader';
+
 interface SuggestionItem {
   id: string;
   title: string;
@@ -83,11 +85,7 @@ const SuggestionsPage: React.FC = () => {
 
   return (
     <div className="panel__content">
-      <header className="panelHeader">
-        <div className="showingLabel">
-          Showing: <strong>All Suggestions</strong>
-        </div>
-      </header>
+      <PanelHeader showingValue="All Suggestions" />
 
       <section className="cardSection" style={{ padding: 0, overflow: 'hidden' }}>
         <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--gray-200)' }}>

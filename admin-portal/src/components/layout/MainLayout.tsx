@@ -13,9 +13,11 @@ import notificationBell from '@/assets/notification-bell.svg';
 import notificationDot from '@/assets/notification-dot.svg';
 import logoutIcon from '@/assets/logout.svg';
 import chevronRight from '@/assets/chevron-right.svg';
+import OnboardingModal from '@/features/onboarding/OnboardingModal';
 
 export const MainLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [onboardingKey, setOnboardingKey] = useState(0);
 
   const location = useLocation();
 
@@ -45,8 +47,15 @@ export const MainLayout: React.FC = () => {
 
       {/* Sidebar */}
       <aside className={`sidebar ${mobileMenuOpen ? 'sidebar--open' : ''}`}>
-        <div className="sidebar__logo">
+        <div className="sidebar__logo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div className="sidebar__logoText">3Line Store</div>
+          <button 
+            className="menuToggle" 
+            style={{ border: 'none', background: 'transparent' }} 
+            onClick={() => setMobileMenuOpen(false)}
+          >
+             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
         </div>
 
         <nav className="sidebar__nav">
@@ -90,6 +99,9 @@ export const MainLayout: React.FC = () => {
       <main className="main">
         <header className="topHeader">
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <button className="menuToggle" onClick={() => setMobileMenuOpen(true)}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+            </button>
             <div className="breadcrumb">
               <div className="breadcrumb__start">
                 <img src={homeIcon} alt="" className="breadcrumb__home" />
@@ -100,7 +112,6 @@ export const MainLayout: React.FC = () => {
           </div>
 
           <div className="iconButton">
-            <div className="iconButton__bg" />
             <img src={notificationBell} alt="" className="iconButton__icon" />
             <img src={notificationDot} alt="" className="iconButton__dot" />
           </div>
@@ -108,15 +119,12 @@ export const MainLayout: React.FC = () => {
 
         <section className="panel">
           <div className="panel__content">
-            <div style={{ marginBottom: 24 }}>
-              <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, color: 'var(--accent)', fontFamily: 'var(--font-title)' }}>
-                {getPageTitle(location.pathname)}
-              </h1>
-            </div>
             <Outlet />
           </div>
         </section>
       </main>
+
+      <OnboardingModal key={onboardingKey} onComplete={() => setOnboardingKey(prev => prev + 1)} />
     </div>
   );
 };

@@ -1,130 +1,128 @@
-import React from 'react';
-import { Form, Input, Button, Card, Typography } from 'antd';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { MailOutlined, LockOutlined } from '@ant-design/icons';
-
-const { Title, Text } = Typography;
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  const onFinish = (values: any) => {
-    console.log('Login values:', values);
+  const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+  const isValid = isValidEmail(email.trim()) && password.trim().length > 0;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isValid) return;
     navigate('/dashboard');
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      display: 'flex', 
-      flexDirection: 'column',
-      justifyContent: 'center', 
-      alignItems: 'center',
-      background: 'radial-gradient(circle at top, #ffffff 0%, #f8fafc 48%, #eef4ff 100%)'
-    }}>
-      <Card style={{ width: 400, borderRadius: 16, boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <Title level={2} style={{ margin: 0 }}>Sign in</Title>
-        </div>
+    <div className="authBody">
+      <main className="authPage" aria-label="Sign in">
+        <section className="authCard" aria-label="Sign in form">
+          <div className="authForm">
+            <header className="authHeader">
+              <h1 className="authTitle">Sign in</h1>
+            </header>
 
-        <Form
-          name="login"
-          layout="vertical"
-          onFinish={onFinish}
-          autoComplete="off"
-          size="large"
-        >
-          <Form.Item
-            label="Email"
-            name="email"
-            rules={[
-              { required: true, message: 'Please input your email!' },
-              { type: 'email', message: 'Please enter a valid email!' }
-            ]}
-          >
-            <Input prefix={<MailOutlined style={{ color: '#bfbfbf' }} />} placeholder="e.g. name@example.com" />
-          </Form.Item>
+            <form className="authFields authFields--compact" onSubmit={handleSubmit} noValidate>
+              <label className="field">
+                <span className="field__label">Email</span>
+                <input
+                  className="field__input"
+                  name="email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="e.g. name@example.com"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                />
+              </label>
 
-          <Form.Item
-            label={
-              <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                <span>Password</span>
-                <Link to="/forgot-password" style={{ fontSize: 13 }}>Forgot Password?</Link>
+              <div className="fieldGroup">
+                <label className="field">
+                  <span className="field__label">Password</span>
+                  <input
+                    className="field__input"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    placeholder="Enter Password Here"
+                    required
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                  />
+                </label>
+
+                <Link className="authInlineLink" to="/forgot-password">Forgot Password?</Link>
               </div>
-            }
-            name="password"
-            rules={[{ required: true, message: 'Please input your password!' }]}
-          >
-            <Input.Password prefix={<LockOutlined style={{ color: '#bfbfbf' }} />} placeholder="Enter Password Here" />
-          </Form.Item>
 
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block style={{ height: 48, borderRadius: 8, marginTop: 16 }}>
-              Sign In
-            </Button>
-          </Form.Item>
-        </Form>
-      </Card>
-      
-      <div style={{ marginTop: 24, textAlign: 'center' }}>
-        <Text type="secondary" style={{ fontSize: 12 }}>Copyright © 2026 3Line Store</Text>
-      </div>
+              <button className="authButton" type="submit" disabled={!isValid}>Sign In</button>
+            </form>
+          </div>
+        </section>
+
+        <footer className="authFooter" aria-label="Footer">
+          <small className="authFooter__copy">Copyright &copy; 2026 3Line Store</small>
+        </footer>
+      </main>
     </div>
   );
 };
 
 export const ForgotPasswordPage: React.FC = () => {
+  const [email, setEmail] = useState('');
+  
+  const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+  const isValid = isValidEmail(email.trim());
 
-  const onFinish = (values: any) => {
-    console.log('Forgot password values:', values);
-    // In a real app, send reset link
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isValid) return;
+    alert("If this email exists, you’ll receive a reset link shortly.");
+    setEmail('');
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      display: 'flex', 
-      flexDirection: 'column',
-      justifyContent: 'center', 
-      alignItems: 'center',
-      background: 'radial-gradient(circle at top, #ffffff 0%, #f8fafc 48%, #eef4ff 100%)'
-    }}>
-      <Card style={{ width: 400, borderRadius: 16, boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }}>
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <Title level={2} style={{ margin: 0 }}>Forgot Password</Title>
-          <Text type="secondary">Enter your email and we'll send you a link to reset your password.</Text>
-        </div>
+    <div className="authBody">
+      <main className="authPage" aria-label="Forgot password">
+        <section className="authCard" aria-label="Forgot password form">
+          <div className="authForm">
+            <header className="authHeader">
+              <h1 className="authTitle">Forgot Password</h1>
+            </header>
 
-        <Form
-          name="forgot-password"
-          layout="vertical"
-          onFinish={onFinish}
-          autoComplete="off"
-          size="large"
-        >
-          <Form.Item
-            label="Email"
-            name="email"
-            rules={[
-              { required: true, message: 'Please input your email!' },
-              { type: 'email', message: 'Please enter a valid email!' }
-            ]}
-            style={{ marginBottom: 32 }}
-          >
-            <Input prefix={<MailOutlined style={{ color: '#bfbfbf' }} />} placeholder="e.g. name@example.com" />
-          </Form.Item>
+            <form className="authFields" onSubmit={handleSubmit} noValidate>
+              <label className="field">
+                <span className="field__label">Email</span>
+                <input
+                  className="field__input"
+                  name="email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="Email"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                />
+              </label>
 
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block style={{ height: 48, borderRadius: 8 }}>
-              Send Reset Link
-            </Button>
-          </Form.Item>
+              <button className="authButton" type="submit" disabled={!isValid}>Submit</button>
+            </form>
 
-          <div style={{ textAlign: 'center' }}>
-            <Link to="/login" style={{ fontSize: 14 }}>Back to Login</Link>
+            <p className="authAlt" style={{ display: 'flex', gap: '4px' }}>
+              <span>I remember my password?</span>
+              <Link className="authAlt__link" to="/login">Sign In</Link>
+            </p>
           </div>
-        </Form>
-      </Card>
+        </section>
+
+        <footer className="authFooter" aria-label="Footer">
+          <small className="authFooter__copy">Copyright &copy; 2026 3Line Store</small>
+        </footer>
+      </main>
     </div>
   );
 };
