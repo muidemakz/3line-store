@@ -38,76 +38,87 @@
         </div>
       </section>
 
-        <div class="storeFilled isHidden" id="storeFilled">
-          <div class="tableFilterBar">
-            <div class="tableFilterBar__left">
-              <div class="tableSearch">
-                <span class="tableSearch__icon" aria-hidden="true">⌕</span>
-                <input class="tableSearch__input" placeholder="Search title" />
-              </div>
-              <button class="tableFilterBtn" type="button">Date <span aria-hidden="true">▾</span></button>
-              <button class="tableApplyBtn" type="button">Apply</button>
+      <div class="storeFilled isHidden" id="storeFilled">
+        <div class="tableFilterBar">
+          <div class="tableFilterBar__left">
+            <div class="tableSearch">
+              <span class="tableSearch__icon" aria-hidden="true">⌕</span>
+              <input class="tableSearch__input" placeholder="Search title" />
             </div>
-            <button class="tableExportBtn" type="button">Export</button>
+            <button class="tableFilterBtn" type="button">Date <span aria-hidden="true">▾</span></button>
+            <button class="tableApplyBtn" type="button">Apply</button>
           </div>
+          <button class="tableExportBtn" type="button">Export</button>
+        </div>
 
-          <div class="dataTable">
-            <div class="dataTable__head">
-              <div>Title</div>
-              <div>Category</div>
-              <div>Qty</div>
-              <div>Price</div>
-              <div>Status</div>
-              <div>Date</div>
-              <div>Actions</div>
-            </div>
-            <div class="dataTable__row dataTable__row--clickable">
-              <div>Sample item</div>
-              <div>General</div>
-              <div>12</div>
-              <div>₦ 0</div>
-              <div><span class="statusBadge statusBadge--active">Active</span></div>
-              <div>01/10/2025</div>
-              <div class="store-actions-placeholder"></div>
-            </div>
-            <div class="dataTable__row dataTable__row--clickable">
-              <div>Sample item</div>
-              <div>General</div>
-              <div>5</div>
-              <div>₦ 0</div>
-              <div><span class="statusBadge statusBadge--active">Active</span></div>
-              <div>02/10/2025</div>
-              <div class="store-actions-placeholder"></div>
-            </div>
+        <div class="dataTable" id="itemsTable">
+          <div class="dataTable__head">
+            <div>Title</div>
+            <div>Brand</div>
+            <div>Unit</div>
+            <div>Price (₦)</div>
+            <div>Points</div>
+            <div>Status</div>
+            <div>Date</div>
+            <div>Actions</div>
           </div>
         </div>
+      </div>
     </template>
 
+    <script src="./store.js"></script>
     <script src="./ui.js"></script>
     <script src="./app-layout.js"></script>
     <script>
       renderDashboardShell({ activeKey: "store", pageTitle: "Store" });
 
-      const params = new URLSearchParams(window.location.search);
-      const state = params.get("state");
-      const empty = document.getElementById("storeEmpty");
-      const filled = document.getElementById("storeFilled");
-      if (state === "filled") {
+      function renderItems() {
+        const items = Store.getItems();
+        const empty = document.getElementById("storeEmpty");
+        const filled = document.getElementById("storeFilled");
+        const table = document.getElementById("itemsTable");
+        if (!table) return;
+
+        table.querySelectorAll('.dataTable__row').forEach(r => r.remove());
+
+        if (items.length === 0) {
+          empty?.classList.remove("isHidden");
+          filled?.classList.add("isHidden");
+          return;
+        }
+
         empty?.classList.add("isHidden");
         filled?.classList.remove("isHidden");
+
+        items.forEach(item => {
+          const row = document.createElement("div");
+          row.className = "dataTable__row dataTable__row--clickable";
+          row.dataset.itemId = item.id;
+          row.innerHTML = `
+            <div>${escapeHtml(item.name)}</div>
+            <div>${escapeHtml(item.brand)}</div>
+            <div>${escapeHtml(item.unit)}</div>
+            <div>₦${item.naira.toLocaleString()}</div>
+            <div>${item.points}PT</div>
+            <div><span class="statusBadge statusBadge--active">Active</span></div>
+            <div>${escapeHtml(item.dateAdded)}</div>
+            <div>${renderTableActions(["View Item", "Edit Item", "Deactivate", "Delete Item"])}</div>
+          `;
+          table.appendChild(row);
+        });
       }
+
+      renderItems();
 
       const addItemBtnTop = document.getElementById("addItemBtnTop");
       const addItemDropdown = document.getElementById("addItemDropdown");
 
-      // Toggle dropdown menu
       addItemBtnTop?.addEventListener("click", (e) => {
-        e.stopPropagation(); // prevent document click from firing immediately
+        e.stopPropagation();
         addItemBtnTop.classList.toggle("adminActionBtn--active");
         addItemDropdown?.classList.toggle("dropdownMenu--open");
       });
 
-      // Close dropdown when outside is clicked
       document.addEventListener("click", (e) => {
         if (!addItemBtnTop?.contains(e.target) && !addItemDropdown?.contains(e.target)) {
           addItemBtnTop?.classList.remove("adminActionBtn--active");
@@ -115,78 +126,43 @@
         }
       });
 
-      // Bulk Upload Action
       document.getElementById("addItemBulkBtn")?.addEventListener("click", () => {
         addItemBtnTop?.classList.remove("adminActionBtn--active");
         addItemDropdown?.classList.remove("dropdownMenu--open");
-        openUploadBulkModal({ 
-          onSubmit: handleItemSubmit
-        });
+        openUploadBulkModal({ onSubmit: () => showSuccessToast("Submitted Successfully") });
       });
 
-      // Single Item Action
       document.getElementById("addItemSingleBtn")?.addEventListener("click", () => {
         addItemBtnTop?.classList.remove("adminActionBtn--active");
         addItemDropdown?.classList.remove("dropdownMenu--open");
-        openAddSingleItemModal({
-          onSubmit: handleItemSubmit
-        });
+        openAddSingleItemModal({ onSubmit: handleItemSubmit });
       });
 
       function handleItemSubmit(data) {
-        showSuccessToast("Submitted Successfully");
-        
-        const empty = document.getElementById("storeEmpty");
-        const filled = document.getElementById("storeFilled");
-        const table = document.querySelector("#storeFilled .dataTable");
-        
-        if (empty && filled) {
-          empty.classList.add("isHidden");
-          filled.classList.remove("isHidden");
-        }
-        
-        if (table) {
-          const newRow = document.createElement("div");
-          newRow.className = "dataTable__row dataTable__row--clickable";
-          // We rely on delegation now
-          const today = new Date().toLocaleDateString("en-GB");
-          
-          newRow.innerHTML = `
-            <div>${escapeHtml(data?.itemName || "Uploaded Item")}</div>
-            <div>General</div>
-            <div>10</div>
-            <div>₦ ${data?.amountNaira || "0"}</div>
-            <div><span class="statusBadge statusBadge--active">Active</span></div>
-            <div>${today}</div>
-            <div>${renderTableActions(["View Item", "Edit Item", "Deactivate", "Delete Item"])}</div>
-          `;
-          table.appendChild(newRow);
-        }
+        Store.addItem(data);
+        showSuccessToast("Item added successfully");
+        renderItems();
       }
 
-      // Initialize sample row actions
-      document.querySelectorAll(".store-actions-placeholder").forEach(el => {
-        el.innerHTML = renderTableActions(["View Item", "Edit Item", "Deactivate", "Delete Item"]);
-      });
-
-      // Unified Table Delegation (Modals & Actions)
-      document.querySelector(".dataTable")?.addEventListener("click", (e) => {
+      document.getElementById("itemsTable")?.addEventListener("click", (e) => {
         const actionItem = e.target.closest(".rowActionItem");
         const dotsInner = e.target.closest(".tableActionDots");
         const row = e.target.closest(".dataTable__row");
 
         if (actionItem) {
           const action = actionItem.dataset.action;
-          const itemName = row.querySelector("div:first-child").textContent;
+          const itemId = row?.dataset.itemId;
+          const item = Store.getItems().find(i => i.id === itemId);
+
           if (action === "view-item") {
-            const price = row.querySelector("div:nth-child(4)").textContent.replace("₦ ", "");
             openViewItemModal({
-              name: itemName,
-              points: (parseInt(price.replace(/,/g, '')) / 10).toString() + "PT",
+              name: item ? `${item.brand} | ${item.name} | ${item.unit}` : "Item",
+              points: item ? `${item.points}PT` : "0PT",
               image: "https://images.unsplash.com/photo-1555507036-ab1f40ce88cb?auto=format&fit=crop&q=80&w=400",
-              description: "A premium product listing from the 3Line Store admin portal."
+              description: item?.description || "A product listing from the 3Line Store."
             });
           } else if (action === "delete-item" || action === "deactivate") {
+            const itemName = row?.querySelector("div:first-child")?.textContent || "Item";
             const isDeactivate = action === "deactivate";
             openDeleteConfirmModal({
               title: isDeactivate ? "Deactivate Item" : "Delete Item",
@@ -200,16 +176,16 @@
           return;
         }
 
-        if (dotsInner) return; // toggleRowMenu handled by inline onclick
+        if (dotsInner) return;
 
         if (row && row.classList.contains("dataTable__row--clickable")) {
-          const itemName = row.querySelector("div:first-child").textContent;
-          const price = row.querySelector("div:nth-child(4)").textContent.replace("₦ ", "");
+          const itemId = row.dataset.itemId;
+          const item = Store.getItems().find(i => i.id === itemId);
           openViewItemModal({
-            name: itemName,
-            points: (parseInt(price.replace(/,/g, '')) / 10).toString() + "PT",
+            name: item ? `${item.brand} | ${item.name} | ${item.unit}` : "Item",
+            points: item ? `${item.points}PT` : "0PT",
             image: "https://images.unsplash.com/photo-1555507036-ab1f40ce88cb?auto=format&fit=crop&q=80&w=400",
-            description: "A premium product listing from the 3Line Store admin portal."
+            description: item?.description || "A product listing from the 3Line Store."
           });
         }
       });

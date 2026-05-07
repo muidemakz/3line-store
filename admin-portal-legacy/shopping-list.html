@@ -17,7 +17,7 @@
 
     <template id="page-template">
       <div class="pageBackRow">
-        <a class="pageBack" href="./order-list.html?state=filled">
+        <a class="pageBack" href="./order-list.html">
           <span aria-hidden="true">←</span>
           <span>Back</span>
         </a>
@@ -26,54 +26,78 @@
       <section class="cardSection">
         <h2 class="sectionTitle">Shopping List</h2>
 
-        <div class="tableFilterBar">
-          <div class="tableFilterBar__left">
-            <div class="tableSearch">
-              <span class="tableSearch__icon" aria-hidden="true">⌕</span>
-              <input class="tableSearch__input" placeholder="Search title" />
-            </div>
-            <button class="tableFilterBtn" type="button">Date <span aria-hidden="true">▾</span></button>
-            <button class="tableApplyBtn" type="button">Apply</button>
+        <div class="emptyState" id="shoppingEmpty">
+          <div class="emptyState__content">
+            <img class="emptyState__icon" src="./assets/archive.svg" alt="" />
+            <div class="emptyState__title">No items yet</div>
+            <div class="emptyState__subtitle">Ordered items will appear here once orders are placed</div>
           </div>
-          <button class="tableExportBtn" type="button">Export</button>
         </div>
 
-        <div class="dataTable">
-          <div class="dataTable__head">
-            <div>Item</div>
-            <div>Category</div>
-            <div>Qty</div>
-            <div>Unit</div>
-            <div>Total</div>
-            <div>Date</div>
-            <div>Actions</div>
+        <div class="shoppingFilled isHidden" id="shoppingFilled">
+          <div class="tableFilterBar">
+            <div class="tableFilterBar__left">
+              <div class="tableSearch">
+                <span class="tableSearch__icon" aria-hidden="true">⌕</span>
+                <input class="tableSearch__input" placeholder="Search item" />
+              </div>
+              <button class="tableFilterBtn" type="button">Date <span aria-hidden="true">▾</span></button>
+              <button class="tableApplyBtn" type="button">Apply</button>
+            </div>
+            <button class="tableExportBtn" type="button">Export</button>
           </div>
-          <div class="dataTable__row">
-            <div>Sample item</div>
-            <div>General</div>
-            <div>1</div>
-            <div>₦ 0</div>
-            <div>₦ 0</div>
-            <div>01/10/2025</div>
-            <div>
-              <button class="secondaryButton" type="button">Approve</button>
+
+          <div class="dataTable" id="shoppingTable">
+            <div class="dataTable__head">
+              <div>Item</div>
+              <div>Unit</div>
+              <div>Total Qty</div>
+              <div>Points Each</div>
             </div>
           </div>
         </div>
       </section>
     </template>
 
+    <script src="./store.js"></script>
     <script src="./ui.js"></script>
     <script src="./app-layout.js"></script>
     <script>
       renderDashboardShell({ activeKey: "store", pageTitle: "Store" });
 
-      document.addEventListener("click", (e) => {
-        const btn = e.target.closest(".secondaryButton");
-        if (!btn) return;
-        openOrderDetailsDrawer();
-      });
+      function renderShoppingList() {
+        // Aggregate across all orders (no session filter = global view)
+        const items = Store.getShoppingList(null);
+        const empty = document.getElementById("shoppingEmpty");
+        const filled = document.getElementById("shoppingFilled");
+        const table = document.getElementById("shoppingTable");
+        if (!table) return;
+
+        table.querySelectorAll('.dataTable__row').forEach(r => r.remove());
+
+        if (items.length === 0) {
+          empty?.classList.remove("isHidden");
+          filled?.classList.add("isHidden");
+          return;
+        }
+
+        empty?.classList.add("isHidden");
+        filled?.classList.remove("isHidden");
+
+        items.forEach(item => {
+          const row = document.createElement("div");
+          row.className = "dataTable__row";
+          row.innerHTML = `
+            <div>${escapeHtml(item.name)}</div>
+            <div>${escapeHtml(item.unit || '-')}</div>
+            <div>${item.qty}</div>
+            <div>${item.points}PT</div>
+          `;
+          table.appendChild(row);
+        });
+      }
+
+      renderShoppingList();
     </script>
   </body>
 </html>
-

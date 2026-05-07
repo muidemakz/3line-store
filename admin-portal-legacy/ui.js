@@ -645,7 +645,7 @@ function openAddSingleItemModal({ onSubmit } = {}) {
           <label class="field" style="flex: 1;">
             <span class="field__label">Amount In points</span>
             <div class="field__inputWrap">
-              <input class="field__input" name="amountPoints" placeholder="0" type="number" required style="background: #F9FAFB;" />
+              <input class="field__input" name="amountPoints" placeholder="0" type="number" readonly style="background: #F9FAFB; cursor: default;" />
               <span class="field__icon" style="font-size: 14px; font-weight: 500; color: #475467; right: 16px; width: auto;">PT</span>
             </div>
           </label>
@@ -668,7 +668,6 @@ function openAddSingleItemModal({ onSubmit } = {}) {
 
   // Fake image upload
   imageUploadBox?.addEventListener("click", () => {
-    // Show a dummy preview image
     if (imagePreview) {
       imagePreview.style.display = "block";
       imagePreview.style.backgroundImage = "url('https://images.unsplash.com/photo-1555507036-ab1f40ce88cb?auto=format&fit=crop&q=80&w=150&h=150')";
@@ -688,6 +687,16 @@ function openAddSingleItemModal({ onSubmit } = {}) {
     i.addEventListener("input", sync);
     i.addEventListener("change", sync);
   });
+
+  // Auto-compute points from naira using the saved point config
+  const nairaInput = form?.querySelector('[name="amountNaira"]');
+  const pointsInput = form?.querySelector('[name="amountPoints"]');
+  nairaInput?.addEventListener('input', () => {
+    if (pointsInput) {
+      pointsInput.value = Store.nairaToPoints(parseFloat(nairaInput.value) || 0);
+    }
+  });
+
   sync();
 
   form?.addEventListener("submit", (e) => {
@@ -992,10 +1001,8 @@ function openPointConfigModal({ onSubmit } = {}) {
     sync();
     if (submit?.disabled) return;
     
-    if(onSubmit) onSubmit({
-      naira: inputNaira.value,
-      points: inputPoints.value
-    });
+    if(onSubmit) onSubmit({ naira: inputNaira.value, points: inputPoints.value });
+    localStorage.setItem('pointConfig', JSON.stringify({ nairaPerPt: parseFloat(inputNaira.value) }));
     
     showSuccessToast("Point Configuration updated");
     closeModal();
