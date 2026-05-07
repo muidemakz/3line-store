@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3Line Store — Store</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Poppins:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <template id="page-template">
+      <div class="panelHeader">
+        <div class="showingLabel">Showing: <strong>All Items</strong></div>
+        <div class="dropdownWrapper">
+          <button class="adminActionBtn" id="addItemBtnTop" type="button">
+            <img class="adminActionBtn__icon" src="./assets/plus.svg" alt="" />
+            <span>Add New Item</span>
+          </button>
+          <div class="dropdownMenu" id="addItemDropdown">
+            <button class="dropdownItem" id="addItemSingleBtn" type="button">Single</button>
+            <button class="dropdownItem" id="addItemBulkBtn" type="button">Bulk Upload</button>
+          </div>
+        </div>
+      </div>
+
+      <section class="cardSection cardSection--large" id="storeEmpty">
+        <div class="emptyState__content">
+          <img class="emptyState__icon" src="./assets/archive.svg" alt="" />
+          <div class="emptyState__title">No Item yet</div>
+          <div class="emptyState__subtitle">Items will show here</div>
+        </div>
+      </section>
+
+      <div class="storeFilled isHidden" id="storeFilled">
+        <div class="tableFilterBar">
+          <div class="tableFilterBar__left">
+            <div class="tableSearch">
+              <span class="tableSearch__icon" aria-hidden="true">⌕</span>
+              <input class="tableSearch__input" placeholder="Search title" />
+            </div>
+            <button class="tableFilterBtn" type="button">Date <span aria-hidden="true">▾</span></button>
+            <button class="tableApplyBtn" type="button">Apply</button>
+          </div>
+          <button class="tableExportBtn" type="button">Export</button>
+        </div>
+
+        <div class="dataTable" id="itemsTable">
+          <div class="dataTable__head">
+            <div>Title</div>
+            <div>Brand</div>
+            <div>Unit</div>
+            <div>Price (₦)</div>
+            <div>Points</div>
+            <div>Status</div>
+            <div>Date</div>
+            <div>Actions</div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <script src="./store.js"></script>
+    <script src="./ui.js"></script>
+    <script src="./app-layout.js"></script>
+    <script>
+      renderDashboardShell({ activeKey: "store", pageTitle: "Store" });
+
+      function renderItems() {
+        const items = Store.getItems();
+        const empty = document.getElementById("storeEmpty");
+        const filled = document.getElementById("storeFilled");
+        const table = document.getElementById("itemsTable");
+        if (!table) return;
+
+        table.querySelectorAll('.dataTable__row').forEach(r => r.remove());
+
+        if (items.length === 0) {
+          empty?.classList.remove("isHidden");
+          filled?.classList.add("isHidden");
+          return;
+        }
+
+        empty?.classList.add("isHidden");
+        filled?.classList.remove("isHidden");
+
+        items.forEach(item => {
+          const row = document.createElement("div");
+          row.className = "dataTable__row dataTable__row--clickable";
+          row.dataset.itemId = item.id;
+          row.innerHTML = `
+            <div>${escapeHtml(item.name)}</div>
+            <div>${escapeHtml(item.brand)}</div>
+            <div>${escapeHtml(item.unit)}</div>
+            <div>₦${item.naira.toLocaleString()}</div>
+            <div>${item.points}PT</div>
+            <div><span class="statusBadge statusBadge--active">Active</span></div>
+            <div>${escapeHtml(item.dateAdded)}</div>
+            <div>${renderTableActions(["View Item", "Edit Item", "Deactivate", "Delete Item"])}</div>
+          `;
+          table.appendChild(row);
+        });
+      }
+
+      renderItems();
+
+      const addItemBtnTop = document.getElementById("addItemBtnTop");
+      const addItemDropdown = document.getElementById("addItemDropdown");
+
+      addItemBtnTop?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        addItemBtnTop.classList.toggle("adminActionBtn--active");
+        addItemDropdown?.classList.toggle("dropdownMenu--open");
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!addItemBtnTop?.contains(e.target) && !addItemDropdown?.contains(e.target)) {
+          addItemBtnTop?.classList.remove("adminActionBtn--active");
+          addItemDropdown?.classList.remove("dropdownMenu--open");
+        }
+      });
+
+      document.getElementById("addItemBulkBtn")?.addEventListener("click", () => {
+        addItemBtnTop?.classList.remove("adminActionBtn--active");
+        addItemDropdown?.classList.remove("dropdownMenu--open");
+        openUploadBulkModal({ onSubmit: () => showSuccessToast("Submitted Successfully") });
+      });
+
+      document.getElementById("addItemSingleBtn")?.addEventListener("click", () => {
+        addItemBtnTop?.classList.remove("adminActionBtn--active");
+        addItemDropdown?.classList.remove("dropdownMenu--open");
+        openAddSingleItemModal({ onSubmit: handleItemSubmit });
+      });
+
+      function handleItemSubmit(data) {
+        Store.addItem(data);
+        showSuccessToast("Item added successfully");
+        renderItems();
+      }
+
+      document.getElementById("itemsTable")?.addEventListener("click", (e) => {
+        const actionItem = e.target.closest(".rowActionItem");
+        const dotsInner = e.target.closest(".tableActionDots");
+        const row = e.target.closest(".dataTable__row");
+
+        if (actionItem) {
+          const action = actionItem.dataset.action;
+          const itemId = row?.dataset.itemId;
+          const item = Store.getItems().find(i => i.id === itemId);
+
+          if (action === "view-item") {
+            openViewItemModal({
+              name: item ? `${item.brand} | ${item.name} | ${item.unit}` : "Item",
+              points: item ? `${item.points}PT` : "0PT",
+              image: "https://images.unsplash.com/photo-1555507036-ab1f40ce88cb?auto=format&fit=crop&q=80&w=400",
+              description: item?.description || "A product listing from the 3Line Store."
+            });
+          } else if (action === "delete-item" || action === "deactivate") {
+            const itemName = row?.querySelector("div:first-child")?.textContent || "Item";
+            const isDeactivate = action === "deactivate";
+            openDeleteConfirmModal({
+              title: isDeactivate ? "Deactivate Item" : "Delete Item",
+              message: `Are you sure you want to ${isDeactivate ? "deactivate" : "delete"} "${itemName}"?`,
+              onConfirm: () => {
+                deleteRow(actionItem, "storeEmpty", "storeFilled");
+                showToast(`Item ${isDeactivate ? "deactivated" : "deleted"} successfully`, "success");
+              }
+            });
+          }
+          return;
+        }
+
+        if (dotsInner) return;
+
+        if (row && row.classList.contains("dataTable__row--clickable")) {
+          const itemId = row.dataset.itemId;
+          const item = Store.getItems().find(i => i.id === itemId);
+          openViewItemModal({
+            name: item ? `${item.brand} | ${item.name} | ${item.unit}` : "Item",
+            points: item ? `${item.points}PT` : "0PT",
+            image: "https://images.unsplash.com/photo-1555507036-ab1f40ce88cb?auto=format&fit=crop&q=80&w=400",
+            description: item?.description || "A product listing from the 3Line Store."
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

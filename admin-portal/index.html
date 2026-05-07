@@ -2,91 +2,26 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>3Line Store — Sign In</title>
+    <title>admin-portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="./styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!--
+      Tomato Grotesk is a commercial font by Fontfabric (fontfabric.com/fonts/tomato-grotesk).
+      To activate it, place the woff2 files in /public/fonts/:
+        - TomatoGrotesk-Regular.woff2
+        - TomatoGrotesk-Medium.woff2
+        - TomatoGrotesk-SemiBold.woff2
+        - TomatoGrotesk-Bold.woff2
+        - TomatoGrotesk-ExtraBold.woff2
+      The @font-face declarations in global.css will pick them up automatically.
+      Until the files are added, Figtree is used as a matching fallback.
+    -->
   </head>
-  <body class="authBody">
-    <main class="authPage" aria-label="Sign in">
-      <section class="authCard" aria-label="Sign in form">
-        <div class="authForm">
-          <header class="authHeader">
-            <h1 class="authTitle">Sign in</h1>
-          </header>
-
-          <form class="authFields authFields--compact" id="signInForm" novalidate>
-            <label class="field">
-              <span class="field__label">Email</span>
-              <input
-                class="field__input"
-                id="email"
-                name="email"
-                type="email"
-                inputmode="email"
-                autocomplete="email"
-                placeholder="e.g. name@example.com"
-                required
-              />
-            </label>
-
-            <div class="fieldGroup">
-              <label class="field">
-                <span class="field__label">Password</span>
-                <input
-                  class="field__input"
-                  id="password"
-                  name="password"
-                  type="password"
-                  autocomplete="current-password"
-                  placeholder="Enter Password Here"
-                  required
-                />
-              </label>
-
-              <a class="authInlineLink" href="./forgot-password.html">Forgot Password?</a>
-            </div>
-
-            <button class="authButton" id="signInBtn" type="submit" disabled>Sign In</button>
-          </form>
-        </div>
-      </section>
-
-      <footer class="authFooter" aria-label="Footer">
-        <small class="authFooter__copy">Copyright &copy; 2026 3Line Store</small>
-      </footer>
-    </main>
-
-    <script>
-      const email = document.getElementById("email");
-      const password = document.getElementById("password");
-      const signInBtn = document.getElementById("signInBtn");
-      const form = document.getElementById("signInForm");
-
-      function isValidEmail(value) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-      }
-
-      function syncButtonState() {
-        const ok = isValidEmail(email.value.trim()) && password.value.trim().length > 0;
-        signInBtn.disabled = !ok;
-      }
-
-      email.addEventListener("input", syncButtonState);
-      password.addEventListener("input", syncButtonState);
-      syncButtonState();
-
-      form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        syncButtonState();
-        if (signInBtn.disabled) return;
-        window.location.href = "./dashboard.html";
-      });
-    </script>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
