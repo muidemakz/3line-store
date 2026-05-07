@@ -1,4 +1,14 @@
+/**
+ * Color primitives and semantic tokens aligned with the admin portal palette.
+ * Use semantic exports in app code — avoid raw hex outside this module and global CSS variables.
+ */
 export const colors = {
+  brand: {
+    /** Admin portal --accent (light theme) */
+    accent: '#00002e',
+    /** Primary actions (buttons): dark navy, shared with admin auth emphasis */
+    navy: '#1a202c'
+  },
   primary: {
     50: '#EAF1FF',
     100: '#D9E6FF',
@@ -41,9 +51,11 @@ export const colors = {
 } as const;
 
 export const semanticColors = {
-  actionPrimary: colors.primary[500],
-  actionPrimaryHover: colors.primary[600],
-  actionPrimaryActive: colors.primary[700],
+  /** Primary filled buttons (Checkitout / admin-aligned navy) */
+  actionPrimary: colors.brand.navy,
+  actionPrimaryHover: '#111827',
+  actionPrimaryActive: '#0f172a',
+  accent: colors.brand.accent,
   actionPrimarySoft: colors.primary[50],
   textPrimary: colors.neutral[900],
   textSecondary: colors.neutral[600],
@@ -53,5 +65,6 @@ export const semanticColors = {
   bgLayout: colors.neutral[50],
   bgSurface: colors.neutral[0],
   borderDefault: colors.neutral[200],
-  borderSoft: colors.neutral[100]
+  borderSoft: colors.neutral[100],
+  danger: colors.error[500]
 } as const;

@@ -1,5 +1,5 @@
 import { Input, type InputProps } from 'antd';
-import type { PasswordProps } from 'antd/es/input';
+import type { PasswordProps, TextAreaProps } from 'antd/es/input';
 
 export function AppInput(props: InputProps) {
   return <Input {...props} />;
@@ -7,4 +7,8 @@ export function AppInput(props: InputProps) {
 
 AppInput.Password = function AppPasswordInput(props: PasswordProps) {
   return <Input.Password {...props} />;
+};
+
+AppInput.TextArea = function AppTextAreaInput(props: TextAreaProps) {
+  return <Input.TextArea {...props} />;
 };

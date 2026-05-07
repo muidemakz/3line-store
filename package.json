@@ -1,0 +1,10 @@
+{
+  "name": "3line-store",
+  "private": true,
+  "scripts": {
+    "dev:admin": "npm run dev --prefix admin-portal",
+    "dev:store": "npm run dev --prefix ecommerce",
+    "preview:admin": "npm run preview --prefix admin-portal",
+    "preview:store": "npm run preview --prefix ecommerce"
+  }
+}

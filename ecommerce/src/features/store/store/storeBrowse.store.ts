@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 
-interface ProductsStoreState {
+interface StoreBrowseState {
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
 }
 
-export const useProductsStore = create<ProductsStoreState>((set) => ({
+export const useStoreBrowseStore = create<StoreBrowseState>((set) => ({
   selectedCategory: 'all',
   setSelectedCategory: (selectedCategory) => set({ selectedCategory })
 }));

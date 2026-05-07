@@ -1,4 +1,6 @@
-export const fontFamily = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+/** Figtree — matches admin portal / Figma direction */
+export const fontFamily =
+  '"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif';
 
 export const typography = {
   display: { fontSize: 72, lineHeight: 84, fontWeight: 700, letterSpacing: '-0.02em' },
