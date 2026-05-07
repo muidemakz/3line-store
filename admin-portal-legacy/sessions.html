@@ -32,98 +32,99 @@
         </div>
       </section>
 
-        <div class="sessionsFilled isHidden" id="sessionsFilled">
-          <div class="tableFilterBar">
-            <div class="tableFilterBar__left">
-              <div class="tableSearch">
-                <span class="tableSearch__icon" aria-hidden="true">⌕</span>
-                <input class="tableSearch__input" placeholder="Search title" />
-              </div>
-              <button class="tableFilterBtn" type="button">Date <span aria-hidden="true">▾</span></button>
-              <button class="tableApplyBtn" type="button">Apply</button>
+      <div class="sessionsFilled isHidden" id="sessionsFilled">
+        <div class="tableFilterBar">
+          <div class="tableFilterBar__left">
+            <div class="tableSearch">
+              <span class="tableSearch__icon" aria-hidden="true">⌕</span>
+              <input class="tableSearch__input" placeholder="Search title" />
             </div>
-            <button class="tableExportBtn" type="button">Export</button>
+            <button class="tableFilterBtn" type="button">Date <span aria-hidden="true">▾</span></button>
+            <button class="tableApplyBtn" type="button">Apply</button>
           </div>
+          <button class="tableExportBtn" type="button">Export</button>
+        </div>
 
-          <div class="dataTable">
-            <div class="dataTable__head">
-              <div>Session</div>
-              <div>Start</div>
-              <div>End</div>
-              <div>Status</div>
-              <div>Users</div>
-              <div>Date</div>
-              <div>Actions</div>
-            </div>
-            <div class="dataTable__row dataTable__row--clickable">
-              <div>End of year</div>
-              <div>01/10/2025</div>
-              <div>30/12/2025</div>
-              <div><span class="statusBadge statusBadge--active">Active</span></div>
-              <div>0</div>
-              <div>01/10/2025</div>
-              <div class="sessions-actions-placeholder"></div>
-            </div>
+        <div class="dataTable" id="sessionsTable">
+          <div class="dataTable__head">
+            <div>Session</div>
+            <div>Start</div>
+            <div>End</div>
+            <div>Status</div>
+            <div>Users</div>
+            <div>Date</div>
+            <div>Actions</div>
           </div>
         </div>
+      </div>
     </template>
 
+    <script src="./store.js"></script>
     <script src="./ui.js"></script>
     <script src="./app-layout.js"></script>
     <script>
       renderDashboardShell({ activeKey: "sessions", pageTitle: "Sessions" });
 
-      const params = new URLSearchParams(window.location.search);
-      const state = params.get("state");
-      const empty = document.getElementById("sessionsEmpty");
-      const filled = document.getElementById("sessionsFilled");
-      if (state === "filled") {
+      function statusBadgeClass(status) {
+        if (status === 'Active') return 'statusBadge--active';
+        if (status === 'Upcoming') return 'statusBadge--upcoming';
+        return 'statusBadge--expired';
+      }
+
+      function renderSessions() {
+        const sessions = Store.getSessions();
+        const empty = document.getElementById("sessionsEmpty");
+        const filled = document.getElementById("sessionsFilled");
+        const table = document.getElementById("sessionsTable");
+        if (!table) return;
+
+        table.querySelectorAll('.dataTable__row').forEach(r => r.remove());
+
+        if (sessions.length === 0) {
+          empty?.classList.remove("isHidden");
+          filled?.classList.add("isHidden");
+          return;
+        }
+
         empty?.classList.add("isHidden");
         filled?.classList.remove("isHidden");
+
+        sessions.forEach(session => {
+          const row = document.createElement("div");
+          row.className = "dataTable__row dataTable__row--clickable";
+          row.dataset.sessionId = session.id;
+          const cls = statusBadgeClass(session.status);
+          row.innerHTML = `
+            <div>${escapeHtml(session.name)}</div>
+            <div>${escapeHtml(session.startDate)}</div>
+            <div>${escapeHtml(session.endDate)}</div>
+            <div><span class="statusBadge ${cls}">${escapeHtml(session.status)}</span></div>
+            <div>${session.userIds.length}</div>
+            <div>${escapeHtml(session.dateCreated)}</div>
+            <div>${renderTableActions(["View Session", "Edit Session", "Deactivate", "Delete Session"])}</div>
+          `;
+          table.appendChild(row);
+        });
       }
+
+      renderSessions();
 
       document.getElementById("addSessionBtnTop")?.addEventListener("click", () => {
         openAddSessionModal({
           onSubmit: (data) => {
-            showSuccessToast("Submitted Successfully");
-            
-            const empty = document.getElementById("sessionsEmpty");
-            const filled = document.getElementById("sessionsFilled");
-            const table = document.querySelector("#sessionsFilled .dataTable");
-            
-            if (empty && filled) {
-              empty.classList.add("isHidden");
-              filled.classList.remove("isHidden");
-            }
-            
-            if (table && data) {
-              const newRow = document.createElement("div");
-              newRow.className = "dataTable__row dataTable__row--clickable";
-              // We rely on delegation now
-              const today = new Date().toLocaleDateString("en-GB");
-              
-              newRow.innerHTML = `
-                <div>${escapeHtml(data.sessionName || "New Session")}</div>
-                <div>${escapeHtml(data.startDate || "-")}</div>
-                <div>${escapeHtml(data.endDate || "-")}</div>
-                <div><span class="statusBadge statusBadge--active">Active</span></div>
-                <div>0</div>
-                <div>${today}</div>
-                <div>${renderTableActions(["View Session", "Edit Session", "Deactivate", "Delete Session"])}</div>
-              `;
-              table.appendChild(newRow);
+            try {
+              Store.createSession(data);
+              showSuccessToast("Session added successfully");
+              renderSessions();
+            } catch (err) {
+              showToast(err.message, "error");
             }
           },
         });
       });
 
-      // Initialize sample row actions
-      document.querySelectorAll(".sessions-actions-placeholder").forEach(el => {
-        el.innerHTML = renderTableActions(["View Session", "Edit Session", "Deactivate", "Delete Session"]);
-      });
-
-      // Unified Table Delegation (Navigation & Actions)
-      document.querySelector(".dataTable")?.addEventListener("click", (e) => {
+      // Table delegation — actions and row clicks
+      document.getElementById("sessionsTable")?.addEventListener("click", (e) => {
         const actionItem = e.target.closest(".rowActionItem");
         const dotsInner = e.target.closest(".tableActionDots");
         const row = e.target.closest(".dataTable__row");
@@ -131,9 +132,10 @@
         if (actionItem) {
           const action = actionItem.dataset.action;
           const sessionName = row?.querySelector("div:first-child")?.textContent || "Session";
-          
+
           if (action === "view-session") {
-            location.href = './session-details.html';
+            const sessionId = row?.dataset.sessionId;
+            location.href = `./session-details.html?id=${sessionId}`;
           } else if (action === "delete-session" || action === "deactivate") {
             const isDeactivate = action === "deactivate";
             openDeleteConfirmModal({
@@ -148,17 +150,13 @@
           return;
         }
 
-        if (dotsInner) return; // toggleRowMenu handled by inline onclick
+        if (dotsInner) return;
 
         if (row && row.classList.contains("dataTable__row--clickable")) {
-          location.href = './session-details.html';
+          const sessionId = row.dataset.sessionId;
+          location.href = `./session-details.html?id=${sessionId}`;
         }
       });
-
-      // Simple HTML escaper for dynamic DOM injection
-      function escapeHtml(value) {
-        return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-      }
     </script>
   </body>
 </html>

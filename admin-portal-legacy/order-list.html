@@ -17,7 +17,7 @@
 
     <template id="page-template">
       <div class="pageBackRow">
-        <a class="pageBack" href="./store.html?state=filled">
+        <a class="pageBack" href="./store.html">
           <span aria-hidden="true">←</span>
           <span>Back</span>
         </a>
@@ -29,7 +29,7 @@
         <div class="emptyState" id="ordersEmpty">
           <div class="emptyState__content">
             <img class="emptyState__icon" src="./assets/archive.svg" alt="" />
-            <div class="emptyState__title">No Order yet</div>
+            <div class="emptyState__title">No Orders yet</div>
             <div class="emptyState__subtitle">Orders will show here</div>
           </div>
         </div>
@@ -44,49 +44,75 @@
               <button class="tableFilterBtn" type="button">Date <span aria-hidden="true">▾</span></button>
               <button class="tableApplyBtn" type="button">Apply</button>
             </div>
-            <button class="tableExportBtn" type="button">Export</button>
+            <div style="display:flex;gap:8px;">
+              <a class="tableExportBtn" href="./shopping-list.html">Shopping List</a>
+              <button class="tableExportBtn" type="button">Export</button>
+            </div>
           </div>
 
-          <div class="dataTable">
+          <div class="dataTable" id="ordersTable">
             <div class="dataTable__head">
               <div>Order</div>
               <div>Customer</div>
-              <div>Qty</div>
-              <div>Total</div>
+              <div>Items</div>
+              <div>Total (PT)</div>
               <div>Status</div>
               <div>Date</div>
               <div>Actions</div>
-            </div>
-            <div class="dataTable__row">
-              <div>#0001</div>
-              <div>Olivia</div>
-              <div>2</div>
-              <div>₦ 0</div>
-              <div>Pending</div>
-              <div>01/10/2025</div>
-              <div>
-                <a class="secondaryButton" href="./shopping-list.html">View</a>
-              </div>
             </div>
           </div>
         </div>
       </section>
     </template>
 
+    <script src="./store.js"></script>
     <script src="./ui.js"></script>
     <script src="./app-layout.js"></script>
     <script>
       renderDashboardShell({ activeKey: "store", pageTitle: "Store" });
 
-      const params = new URLSearchParams(window.location.search);
-      const state = params.get("state");
-      const empty = document.getElementById("ordersEmpty");
-      const filled = document.getElementById("ordersFilled");
-      if (state === "filled") {
+      function renderOrders() {
+        const orders = Store.getOrders();
+        const empty = document.getElementById("ordersEmpty");
+        const filled = document.getElementById("ordersFilled");
+        const table = document.getElementById("ordersTable");
+        if (!table) return;
+
+        table.querySelectorAll('.dataTable__row').forEach(r => r.remove());
+
+        if (orders.length === 0) {
+          empty?.classList.remove("isHidden");
+          filled?.classList.add("isHidden");
+          return;
+        }
+
         empty?.classList.add("isHidden");
         filled?.classList.remove("isHidden");
+
+        orders.forEach(order => {
+          const row = document.createElement("div");
+          row.className = "dataTable__row";
+          row.dataset.orderId = order.id;
+          row.innerHTML = `
+            <div>${escapeHtml(order.id)}</div>
+            <div>${escapeHtml(order.userName)}</div>
+            <div>${order.items.length}</div>
+            <div>${order.totalPoints}PT</div>
+            <div>${escapeHtml(order.status)}</div>
+            <div>${escapeHtml(order.date)}</div>
+            <div><button class="secondaryButton orderDetailsBtn" type="button">View</button></div>
+          `;
+          table.appendChild(row);
+        });
       }
+
+      renderOrders();
+
+      document.addEventListener("click", (e) => {
+        if (e.target.closest(".orderDetailsBtn")) {
+          openOrderDetailsDrawer();
+        }
+      });
     </script>
   </body>
 </html>
-
