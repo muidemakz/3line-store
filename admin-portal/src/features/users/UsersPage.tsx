@@ -1,253 +1,339 @@
-import React, { useState } from 'react';
-import { Table, Dropdown, Modal } from 'antd';
+import React, { useState, useMemo } from 'react';
+import { Table, Dropdown, Modal, Form, Input, Select } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import EmptyState from '@/components/common/EmptyState';
 import PanelHeader from '@/components/common/PanelHeader';
+import TableFilterBar from '@/components/common/TableFilterBar';
+import { useDataStore } from '@/shared/store/data.store';
+import type { UserItem } from '@/shared/store/data.store';
+import ConfirmationModal from '@/shared/components/modals/ConfirmationModal';
+import { useSearch, matchesSearch } from '@/shared/hooks/useSearch';
+import { useConfirmModal } from '@/shared/hooks/useConfirmModal';
+import { capitalize } from '@/shared/utils/string';
+import { formatDate } from '@/shared/utils/date';
 
 import usersIcon from '@/assets/sidebar-users.svg';
 
-interface UserItem {
-  id: string;
-  name: string;
-  email: string;
+interface UserFormValues {
+  userName: string;
+  userEmail: string;
   userType: string;
   gradeLevel: string;
-  status: 'active' | 'inactive';
-  date: string;
 }
 
 const UsersPage: React.FC = () => {
   const [modalType, setModalType] = useState<'single' | 'bulk' | null>(null);
   const [hasFile, setHasFile] = useState(false);
-  const [data, setData] = useState<UserItem[]>([
-    { id: '1', name: 'John Doe', email: 'john@example.com', userType: 'Admin', gradeLevel: 'Level 1', status: 'active', date: '01/10/2025' },
-  ]);
+  const { users: data, addUser, deleteUser, toggleUserStatus, gradeLevels } = useDataStore();
 
-  const [userName, setUserName] = useState('');
-  const [userEmail, setUserEmail] = useState('');
-  const [userType, setUserType] = useState('');
-  const [gradeLevel, setGradeLevel] = useState('');
+  const [singleForm] = Form.useForm();
+  const { searchText, setSearchText, debouncedSearch } = useSearch();
+  const [roleFilter, setRoleFilter] = useState('');
+  const confirm = useConfirmModal();
 
-  const isSingleValid = userName.trim() && userEmail.trim() && userType && gradeLevel;
+  const filteredData = useMemo(() =>
+    data.filter(user =>
+      (matchesSearch(user.name, debouncedSearch) || matchesSearch(user.email, debouncedSearch)) &&
+      (!roleFilter || user.userType === roleFilter)
+    ),
+    [data, debouncedSearch, roleFilter]
+  );
 
-  const resetForm = () => { setUserName(''); setUserEmail(''); setUserType(''); setGradeLevel(''); };
-
-  const handleSingleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isSingleValid) return;
-    setData(prev => [...prev, {
-      id: Date.now().toString(),
-      name: userName,
-      email: userEmail,
-      userType,
-      gradeLevel,
+  const handleSingleSubmit = (values: UserFormValues) => {
+    addUser({
+      name: values.userName,
+      email: values.userEmail,
+      userType: values.userType,
+      gradeLevel: values.gradeLevel,
       status: 'active',
-      date: new Date().toLocaleDateString('en-GB'),
-    }]);
-    resetForm();
-    setModalType(null);
-  };
-
-  const handleBulkSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!hasFile) return;
-    setHasFile(false);
+    });
+    singleForm.resetFields();
     setModalType(null);
   };
 
   const columns: ColumnsType<UserItem> = [
-    {
-      title: "User's Name", dataIndex: 'name', key: 'name',
-      render: (text) => <span style={{ fontWeight: 600, color: 'var(--text-900)' }}>{text}</span>,
-    },
+    { title: 'Date Added', dataIndex: 'createdAt', key: 'createdAt', render: (val: string) => formatDate(val) },
+    { title: 'Name', dataIndex: 'name', key: 'name', render: (text) => <span style={{ fontWeight: 600, color: 'var(--text-900)' }}>{text}</span> },
     { title: 'Email', dataIndex: 'email', key: 'email' },
-    { title: 'User Type', dataIndex: 'userType', key: 'userType' },
     { title: 'Grade Level', dataIndex: 'gradeLevel', key: 'gradeLevel' },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
-      render: (status) => (
-        <span className={`statusBadge ${status === 'active' ? 'statusBadge--active' : ''}`}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+      title: 'Type',
+      dataIndex: 'userType',
+      key: 'userType',
+      render: (type: string) => (
+        <span style={{ color: type === 'Admin' ? 'var(--accent)' : 'var(--text-600)', fontWeight: type === 'Admin' ? 600 : 400 }}>
+          {type}
         </span>
       ),
     },
-    { title: 'Date Joined', dataIndex: 'date', key: 'date' },
     {
-      title: 'Actions', key: 'actions',
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => (
+        <span className={`statusBadge ${status === 'active' ? 'statusBadge--active' : ''}`}>
+          {capitalize(status)}
+        </span>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
       render: (_, record) => (
         <Dropdown
           menu={{
             items: [
               { key: 'view', label: 'View Profile' },
               { key: 'edit', label: 'Edit User' },
-              { key: 'deactivate', label: 'Deactivate', danger: true },
+              {
+                key: 'status',
+                label: record.status === 'active' ? 'Deactivate' : 'Activate',
+                onClick: () => confirm.open({
+                  title: record.status === 'active' ? 'Deactivate User' : 'Activate User',
+                  message: `Are you sure you want to ${record.status === 'active' ? 'deactivate' : 'activate'} ${record.name}?`,
+                  confirmLabel: 'Yes, Confirm',
+                  onConfirm: () => toggleUserStatus(record.id),
+                }),
+              },
+              {
+                key: 'delete',
+                label: 'Delete User',
+                danger: true,
+                onClick: () => confirm.open({
+                  title: 'Delete User',
+                  message: `Are you sure you want to delete ${record.name}?`,
+                  confirmLabel: 'Yes, Delete',
+                  onConfirm: () => deleteUser(record.id),
+                }),
+              },
             ],
           }}
           trigger={['click']}
         >
-          <div className="tableActionDots" style={{ cursor: 'pointer', padding: '4px 8px' }}>...</div>
+          <div className="tableActionDots">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 13a1 1 0 100-2 1 1 0 000 2zm0-6a1 1 0 100-2 1 1 0 000 2zm0 12a1 1 0 100-2 1 1 0 000 2z" strokeLinecap="round" />
+            </svg>
+          </div>
         </Dropdown>
       ),
     },
   ];
+
+  const closeModal = () => { singleForm.resetFields(); setModalType(null); };
+  const closeBulkModal = () => { setHasFile(false); setModalType(null); };
 
   return (
     <div className="panel__content">
       <PanelHeader
         showingValue="All Users"
         action={{
-          label: "Add New User",
+          label: 'Add New User',
           dropdownItems: [
             { key: 'single', label: 'Single User', onClick: () => setModalType('single') },
-            { key: 'bulk', label: 'Bulk Upload', onClick: () => { setHasFile(false); setModalType('bulk'); } },
+            { key: 'bulk', label: 'Bulk Upload', onClick: () => setModalType('bulk') },
           ],
         }}
       />
 
       <section className="cardSection" style={{ padding: 0, overflow: 'hidden', minHeight: 400 }}>
-        <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--gray-200)' }}>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <button className="secondaryButton">Search users</button>
-            <button className="secondaryButton">Role</button>
-            <button className="adminActionBtn" style={{ padding: '0 24px' }}>Apply</button>
-          </div>
-          <button className="secondaryButton">Export</button>
-        </div>
-        {data.length > 0 ? (
-          <Table columns={columns} dataSource={data} rowKey="id" pagination={{ pageSize: 10 }} className="dataTable" />
+        <TableFilterBar
+          searchText={searchText}
+          onSearchChange={setSearchText}
+          searchPlaceholder="Search users..."
+          onExport={() => {}}
+          hasActiveFilters={!!roleFilter}
+          onClear={() => setRoleFilter('')}
+        >
+          <Select
+            placeholder="Role"
+            allowClear
+            value={roleFilter || undefined}
+            onChange={val => setRoleFilter(val ?? '')}
+            style={{ width: 120, height: 40 }}
+            options={[
+              { value: 'Admin', label: 'Admin' },
+              { value: 'User', label: 'User' },
+            ]}
+          />
+        </TableFilterBar>
+
+        {filteredData.length > 0 ? (
+          <Table
+            columns={columns}
+            dataSource={filteredData.map(u => ({ ...u, key: u.id }))}
+            pagination={{ pageSize: 10 }}
+            className="dataTable"
+          />
         ) : (
           <EmptyState
-            title="No Users yet"
-            description="Users added to the portal will show here"
+            title="No Users match"
+            description={data.length === 0 ? 'Users added to the portal will show here' : 'Try adjusting your search criteria'}
             icon={usersIcon}
-            action={{ label: "Add New User", onClick: () => setModalType('single') }}
+            action={data.length === 0 ? { label: 'Add New User', onClick: () => setModalType('single') } : undefined}
           />
         )}
       </section>
 
+      <ConfirmationModal
+        isOpen={confirm.isOpen}
+        onClose={confirm.close}
+        onConfirm={confirm.onConfirm}
+        title={confirm.title}
+        message={confirm.message}
+        confirmLabel={confirm.confirmLabel}
+      />
+
       {/* Add Single User Modal */}
       <Modal
+        title={null}
         open={modalType === 'single'}
-        onCancel={() => { resetForm(); setModalType(null); }}
-        footer={null} closable={false} destroyOnClose width={480}
-        styles={{ body: { padding: 0 } }}
+        onCancel={closeModal}
+        footer={null}
+        closable={false}
+        destroyOnClose
+        width={480}
+        centered
       >
         <header className="modalHeader">
           <div className="modalHeader__titleRow">
-            <span className="modalHeader__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M9 22V12h6v10" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <span className="modalHeader__icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" className="icon--dark-optimized">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
             <div className="modalHeader__titles">
               <div className="modalHeader__title">Add New User</div>
             </div>
-            <button className="modalHeader__close" type="button" onClick={() => { resetForm(); setModalType(null); }} aria-label="Close">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-                <path d="M18 6L6 18M6 6l12 12" stroke="#667085" strokeWidth="2" strokeLinecap="round" />
+            <button className="modalHeader__close" type="button" onClick={closeModal}>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" className="icon--dark-optimized">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </button>
           </div>
           <div className="modalHeader__desc">Provide the new user details you would like to add below.</div>
         </header>
 
-        <form className="modalBody" onSubmit={handleSingleSubmit} noValidate>
+        <Form
+          form={singleForm}
+          layout="vertical"
+          onFinish={handleSingleSubmit}
+          className="modalBody"
+          requiredMark={false}
+        >
           <div className="fieldGroup">
-            <label className="field">
-              <span className="field__label">User's Name</span>
-              <input className="field__input" name="userName" placeholder="e.g James Oyeniyi" required value={userName} onChange={e => setUserName(e.target.value)} />
-            </label>
-            <label className="field">
-              <span className="field__label">User's Email</span>
-              <input className="field__input" type="email" name="userEmail" placeholder="jamesomoniyi@mail.com" required value={userEmail} onChange={e => setUserEmail(e.target.value)} />
-            </label>
-            <label className="field">
-              <span className="field__label">User Type</span>
-              <div className="field__inputWrap">
-                <select className="field__input" name="userType" required style={{ appearance: 'none' }} value={userType} onChange={e => setUserType(e.target.value)}>
-                  <option value="" disabled>Select An Option</option>
-                  <option value="User">User</option>
-                  <option value="Admin">Admin</option>
-                </select>
-                <span className="field__icon" style={{ pointerEvents: 'none' }} aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
-                    <path d="M6 9l6 6 6-6" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-              </div>
-            </label>
-            <label className="field">
-              <span className="field__label">Grade Level</span>
-              <div className="field__inputWrap">
-                <select className="field__input" name="gradeLevel" required style={{ appearance: 'none' }} value={gradeLevel} onChange={e => setGradeLevel(e.target.value)}>
-                  <option value="" disabled>Select An Option</option>
-                  <option value="Level 1">Level 1</option>
-                  <option value="Level 2">Level 2</option>
-                  <option value="Level 3">Level 3</option>
-                </select>
-                <span className="field__icon" style={{ pointerEvents: 'none' }} aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
-                    <path d="M6 9l6 6 6-6" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-              </div>
-            </label>
+            <div className="field">
+              <Form.Item
+                label={<span className="field__label">User's Name</span>}
+                name="userName"
+                rules={[{ required: true, message: 'Please enter a name' }]}
+              >
+                <Input className="field__input" placeholder="e.g James Oyeniyi" />
+              </Form.Item>
+            </div>
+
+            <div className="field">
+              <Form.Item
+                label={<span className="field__label">User's Email</span>}
+                name="userEmail"
+                rules={[
+                  { required: true, message: 'Please enter an email' },
+                  { type: 'email', message: 'Please enter a valid email' },
+                ]}
+              >
+                <Input className="field__input" type="email" placeholder="jamesomoniyi@mail.com" />
+              </Form.Item>
+            </div>
+
+            <div className="field">
+              <Form.Item
+                label={<span className="field__label">User Type</span>}
+                name="userType"
+                rules={[{ required: true, message: 'Please select a type' }]}
+              >
+                <Select
+                  className="field__input"
+                  style={{ width: '100%', padding: 0 }}
+                  placeholder="Select An Option"
+                  options={[
+                    { value: 'User', label: 'User' },
+                    { value: 'Admin', label: 'Admin' },
+                  ]}
+                />
+              </Form.Item>
+            </div>
+
+            <div className="field">
+              <Form.Item
+                label={<span className="field__label">Grade Level</span>}
+                name="gradeLevel"
+                rules={[{ required: true, message: 'Please select a grade level' }]}
+              >
+                <Select
+                  className="field__input"
+                  style={{ width: '100%', padding: 0 }}
+                  placeholder={gradeLevels.length === 0 ? 'No grade levels configured' : 'Select An Option'}
+                  disabled={gradeLevels.length === 0}
+                  options={gradeLevels.map(g => ({
+                    value: g.name,
+                    label: `${g.name} (${g.points} PT)`,
+                  }))}
+                />
+              </Form.Item>
+            </div>
           </div>
 
           <div className="modalActions" style={{ justifyContent: 'center', gap: 12, marginTop: 24 }}>
-            <button className="secondaryButton" type="button" style={{ flex: 1 }} onClick={() => { resetForm(); setModalType(null); }}>Cancel</button>
-            <button
-              className="authButton" type="submit" disabled={!isSingleValid}
-              style={{ flex: 1, backgroundColor: isSingleValid ? '#00002A' : '#d5d7da', borderColor: isSingleValid ? '#00002A' : '#d5d7da' }}
-            >Create New</button>
+            <button className="secondaryButton" type="button" style={{ flex: 1 }} onClick={closeModal}>Cancel</button>
+            <button className="authButton" type="submit" style={{ flex: 1 }}>Create New</button>
           </div>
-        </form>
+        </Form>
       </Modal>
 
       {/* Bulk Upload Modal */}
       <Modal
+        title={null}
         open={modalType === 'bulk'}
-        onCancel={() => { setHasFile(false); setModalType(null); }}
-        footer={null} closable={false} destroyOnClose width={480}
-        styles={{ body: { padding: 0 } }}
+        onCancel={closeBulkModal}
+        footer={null}
+        closable={false}
+        destroyOnClose
+        width={480}
+        centered
       >
         <header className="modalHeader">
           <div className="modalHeader__titleRow">
-            <span className="modalHeader__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-                <path d="M12 16V4m0 0l-4 4m4-4l4 4" stroke="#667085" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3" stroke="#667085" strokeWidth="2" strokeLinecap="round" />
+            <span className="modalHeader__icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" className="icon--dark-optimized">
+                <path d="M12 16V4m0 0l-4 4m4-4l4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </span>
             <div className="modalHeader__titles">
               <div className="modalHeader__title">Upload Bulk</div>
             </div>
-            <button className="modalHeader__close" type="button" onClick={() => { setHasFile(false); setModalType(null); }} aria-label="Close">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-                <path d="M18 6L6 18M6 6l12 12" stroke="#667085" strokeWidth="2" strokeLinecap="round" />
+            <button className="modalHeader__close" type="button" onClick={closeBulkModal}>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" className="icon--dark-optimized">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </button>
           </div>
           <div className="modalHeader__desc">Upload the file below</div>
         </header>
 
-        <form className="modalBody" onSubmit={handleBulkSubmit} noValidate>
-          <button
-            className={`fileDrop${hasFile ? ' fileDrop--selected' : ''}`}
-            type="button"
-            onClick={() => setHasFile(true)}
-          >
-            <span className="fileDrop__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="48" height="48" fill="none">
-                <path d="M7 16a4 4 0 010-8 5 5 0 019.7 1.3A3.5 3.5 0 1117 16" stroke="#667085" strokeWidth="1.8" strokeLinecap="round" />
-                <path d="M12 12v7m0-7l-3 3m3-3l3 3" stroke="#667085" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <div className="modalBody">
+          <button className={`fileDrop ${hasFile ? 'fileDrop--selected' : ''}`} type="button" onClick={() => setHasFile(true)}>
+            <div className="fileDrop__icon">
+              <svg viewBox="0 0 24 24" width="48" height="48" fill="none" className="icon--dark-optimized">
+                <path d="M7 16a4 4 0 010-8 5 5 0 019.7 1.3A3.5 3.5 0 1117 16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                <path d="M12 12v7m0-7l-3 3m3-3l3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </span>
-            <span className="fileDrop__text">
+            </div>
+            <div className="fileDrop__text">
               <span>Drag your file here, or <span className="fileDrop__browse">browse</span></span>
               <span className="fileDrop__sub">supports: CSV, XLSX</span>
-            </span>
+            </div>
           </button>
 
           <div className="fileHelp">
@@ -256,10 +342,10 @@ const UsersPage: React.FC = () => {
           </div>
 
           <div className="modalActions">
-            <button className="secondaryButton" type="button" onClick={() => { setHasFile(false); setModalType(null); }}>Cancel</button>
-            <button className="authButton" type="submit" disabled={!hasFile}>Submit</button>
+            <button className="secondaryButton" type="button" style={{ flex: 1 }} onClick={closeBulkModal}>Cancel</button>
+            <button className="authButton" type="button" style={{ flex: 1 }} disabled={!hasFile} onClick={closeBulkModal}>Submit</button>
           </div>
-        </form>
+        </div>
       </Modal>
     </div>
   );

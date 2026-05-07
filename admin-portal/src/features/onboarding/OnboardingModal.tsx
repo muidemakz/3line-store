@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Input, InputNumber } from 'antd';
-import { 
-  ArrowLeftOutlined, 
-  PlusOutlined, 
+import {
+  ArrowLeftOutlined,
+  PlusOutlined,
   MinusCircleOutlined,
   InfoCircleOutlined
 } from '@ant-design/icons';
+import { useDataStore } from '@/shared/store/data.store';
 
 interface GradeItem {
   level: string;
@@ -17,6 +18,7 @@ interface OnboardingModalProps {
 }
 
 const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
+  const { updateSettings, setGradeLevels } = useDataStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [nairaPerPt, setNairaPerPt] = useState<number | string>('');
@@ -45,9 +47,18 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
   };
 
   const handleSubmit = () => {
+    if (nairaPerPt) {
+      updateSettings({ nairaPerPoint: Number(nairaPerPt) });
+    }
+    const validGrades = grades.filter(g => g.level && g.points);
+    if (validGrades.length > 0) {
+      setGradeLevels(validGrades.map((g, i) => ({
+        id: (i + 1).toString(),
+        name: g.level,
+        points: Number(g.points),
+      })));
+    }
     localStorage.setItem('onboardingComplete', '1');
-    localStorage.setItem('pointConfig', JSON.stringify({ nairaPerPt }));
-    localStorage.setItem('gradeConfig', JSON.stringify(grades));
     setIsVisible(false);
     onComplete();
   };
@@ -116,10 +127,10 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f2f7ff', display: 'grid', placeItems: 'center', color: 'var(--accent)' }}>
-          <ArrowLeftOutlined rotate={90} />
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--gray-100)', display: 'grid', placeItems: 'center', color: 'var(--accent)' }}>
+          <ArrowLeftOutlined rotate={90} className="icon--dark-optimized" />
         </div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Point Configuration</h2>
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: 'var(--text-900)' }}>Point Configuration</h2>
       </div>
       <p style={{ fontSize: 14, color: 'var(--text-600)', marginBottom: 24 }}>Set the rate for your desired point value.</p>
 
@@ -139,13 +150,13 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
         <div style={{ flex: 1 }}>
           <label className="field__label">Amount in Points</label>
           <div style={{ position: 'relative' }}>
-            <Input disabled value="1" className="field__input" style={{ background: 'var(--gray-100)' }} />
+            <Input disabled value="1" className="field__input" style={{ background: 'var(--gray-100)', border: '1px solid var(--gray-200)' }} />
             <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 12, fontWeight: 700, color: 'var(--text-400)' }}>PT</span>
           </div>
         </div>
       </div>
 
-      <div style={{ background: '#f9fafb', padding: '12px', borderRadius: 8, fontSize: 13, color: 'var(--text-600)', marginBottom: 24 }}>
+      <div style={{ background: 'var(--gray-50)', padding: '12px', borderRadius: 8, fontSize: 13, color: 'var(--text-600)', marginBottom: 24, border: '1px solid var(--gray-200)' }}>
         {nairaPerPt ? `Every ₦${Number(nairaPerPt).toLocaleString()} is equivalent to 1PT` : 'Enter an amount in Naira to see the conversion.'}
       </div>
 
@@ -170,10 +181,10 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f2f7ff', display: 'grid', placeItems: 'center', color: 'var(--accent)' }}>
-          <MinusCircleOutlined rotate={90} />
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--gray-100)', display: 'grid', placeItems: 'center', color: 'var(--accent)' }}>
+          <MinusCircleOutlined rotate={90} className="icon--dark-optimized" />
         </div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Grade Level Configuration</h2>
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: 'var(--text-900)' }}>Grade Level Configuration</h2>
       </div>
       <p style={{ fontSize: 14, color: 'var(--text-600)', marginBottom: 24 }}>Set up the grade levels and assigned points.</p>
 
@@ -185,6 +196,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
             <div style={{ flex: 1 }}>
               {idx === 0 && <label className="field__label">Grade Level <span style={{ color: 'var(--danger)' }}>*</span></label>}
               <Input 
+                className="field__input"
                 placeholder={`e.g. Level ${idx + 1}`} 
                 value={grade.level} 
                 onChange={e => {
@@ -199,6 +211,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
               <div style={{ position: 'relative' }}>
                 <InputNumber 
                   style={{ width: '100%' }} 
+                  className="field__input"
                   placeholder="e.g. 3000" 
                   value={grade.points as number} 
                   onChange={val => {
@@ -216,7 +229,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
               icon={<MinusCircleOutlined />} 
               disabled={grades.length === 1}
               onClick={() => setGrades(grades.filter((_, i) => i !== idx))}
-              style={{ padding: 4 }}
+              style={{ padding: 4, height: 56 }}
             />
           </div>
         ))}
@@ -227,7 +240,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
         block 
         icon={<PlusOutlined />} 
         onClick={() => setGrades([...grades, { level: '', points: '' }])}
-        style={{ marginBottom: 24 }}
+        style={{ marginBottom: 24, height: 48, borderRadius: 8 }}
       >
         Add New Grade Level
       </Button>
@@ -240,21 +253,35 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
   );
 
   return (
-    <Modal
-      open={isVisible}
-      footer={null}
-      closable={false}
-      centered
-      width={500}
-      className="onboardingModal"
-      styles={{ 
-        body: { padding: 32 } 
-      }}
-    >
-      {currentStep === 0 && renderWelcome()}
-      {currentStep === 1 && renderPointConfig()}
-      {currentStep === 2 && renderGradeLevels()}
-    </Modal>
+    <>
+      <Modal
+        open={isVisible}
+        footer={null}
+        closable={false}
+        centered
+        width={500}
+        className="onboardingModal"
+        styles={{ 
+          mask: { backdropFilter: 'blur(4px)', background: 'rgba(0,0,0,0.4)' },
+          body: { padding: 32 }
+        }}
+      >
+        {currentStep === 0 && renderWelcome()}
+        {currentStep === 1 && renderPointConfig()}
+        {currentStep === 2 && renderGradeLevels()}
+      </Modal>
+
+      {/* Temporary Reset Trigger for testing purposes */}
+      <div 
+        style={{ position: 'fixed', bottom: 10, left: 10, opacity: 0.1, cursor: 'pointer', zIndex: 9999 }}
+        onClick={() => {
+          localStorage.removeItem('onboardingComplete');
+          window.location.reload();
+        }}
+      >
+        Reset Onboarding
+      </div>
+    </>
   );
 };
 

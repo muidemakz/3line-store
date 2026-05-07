@@ -1,61 +1,56 @@
-import React, { useState } from 'react';
-import { Table, Dropdown } from 'antd';
+import React, { useState, useMemo } from 'react';
+import { Table, Dropdown, DatePicker } from 'antd';
+import type { Dayjs } from 'dayjs';
+
+type RangeValue = [Dayjs | null, Dayjs | null] | null;
 import type { ColumnsType } from 'antd/es/table';
-
+import EmptyState from '@/components/common/EmptyState';
 import PanelHeader from '@/components/common/PanelHeader';
+import TableFilterBar from '@/components/common/TableFilterBar';
+import { useDataStore } from '@/shared/store/data.store';
+import type { SuggestionItem } from '@/shared/store/data.store';
+import { formatDate } from '@/shared/utils/date';
+import { capitalize } from '@/shared/utils/string';
+import ConfirmationModal from '@/shared/components/modals/ConfirmationModal';
+import { useSearch, matchesSearch } from '@/shared/hooks/useSearch';
+import { useConfirmModal } from '@/shared/hooks/useConfirmModal';
 
-interface SuggestionItem {
-  id: string;
-  title: string;
-  submittedBy: string;
-  progress: string;
-  status: 'open' | 'approved' | 'declined';
-  date: string;
-}
+import suggestionsIcon from '@/assets/sidebar-suggestions.svg';
 
 const SuggestionsPage: React.FC = () => {
-  const [data] = useState<SuggestionItem[]>([
-    { 
-      id: '1', 
-      title: 'Milo refill', 
-      submittedBy: 'Nasco', 
-      progress: '—', 
-      status: 'open', 
-      date: '01/10/2025' 
-    },
-  ]);
+  const { suggestions: data, users, deleteSuggestion } = useDataStore();
+
+  const { searchText, setSearchText, debouncedSearch } = useSearch();
+  const [dateRange, setDateRange] = useState<RangeValue>(null);
+  const confirm = useConfirmModal();
+
+  const filteredData = useMemo(() =>
+    data.filter(item => {
+      const submittedBy = users.find(u => u.id === item.userId)?.name ?? '';
+      return matchesSearch(item.title, debouncedSearch) || matchesSearch(submittedBy, debouncedSearch);
+    }),
+    [data, users, debouncedSearch]
+  );
 
   const columns: ColumnsType<SuggestionItem> = [
+    { title: 'Suggestion Title', dataIndex: 'title', key: 'title', render: (text: string) => <span style={{ fontWeight: 600 }}>{text}</span> },
+    { title: 'Category', dataIndex: 'category', key: 'category' },
     {
-      title: 'Title',
-      dataIndex: 'title',
-      key: 'title',
-      render: (text) => <span style={{ fontWeight: 600, color: 'var(--text-900)' }}>{text}</span>,
-    },
-    {
-      title: 'Submitted by',
-      dataIndex: 'submittedBy',
+      title: 'Submitted By',
       key: 'submittedBy',
+      render: (_: unknown, record: SuggestionItem) => users.find(u => u.id === record.userId)?.name ?? '—',
     },
-    {
-      title: 'Progress',
-      dataIndex: 'progress',
-      key: 'progress',
-    },
+    { title: 'Date Submitted', dataIndex: 'createdAt', key: 'createdAt', render: (val: string) => formatDate(val) },
+    { title: 'Progress', dataIndex: 'progress', key: 'progress' },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => (
-        <span className={`statusBadge ${status === 'approved' ? 'statusBadge--active' : ''}`}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+      render: (status: string) => (
+        <span className={`statusBadge ${status === 'open' ? 'statusBadge--active' : ''}`}>
+          {capitalize(status)}
         </span>
       ),
-    },
-    {
-      title: 'Date',
-      dataIndex: 'date',
-      key: 'date',
     },
     {
       title: 'Actions',
@@ -64,48 +59,77 @@ const SuggestionsPage: React.FC = () => {
         <Dropdown
           menu={{
             items: [
-              { key: 'view', label: 'View Suggestion' },
               { key: 'approve', label: 'Approve' },
               { key: 'decline', label: 'Decline' },
-              { key: 'delete', label: 'Delete', danger: true },
+              {
+                key: 'delete',
+                label: 'Delete',
+                danger: true,
+                onClick: () => confirm.open({
+                  title: 'Delete Suggestion',
+                  message: `Are you sure you want to delete the suggestion "${record.title}"?`,
+                  confirmLabel: 'Yes, Delete',
+                  onConfirm: () => deleteSuggestion(record.id),
+                }),
+              },
             ],
-            onClick: ({ key }) => handleAction(key, record),
           }}
           trigger={['click']}
         >
-          <div className="tableActionDots">...</div>
+          <div className="tableActionDots" style={{ cursor: 'pointer', padding: '4px 8px' }}>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 13a1 1 0 100-2 1 1 0 000 2zm0-6a1 1 0 100-2 1 1 0 000 2zm0 12a1 1 0 100-2 1 1 0 000 2z" strokeLinecap="round" />
+            </svg>
+          </div>
         </Dropdown>
       ),
     },
   ];
 
-  const handleAction = (key: string, record: SuggestionItem) => {
-    console.log('Action:', key, 'on', record);
-  };
-
   return (
     <div className="panel__content">
       <PanelHeader showingValue="All Suggestions" />
 
-      <section className="cardSection" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--gray-200)' }}>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <button className="secondaryButton" style={{ height: 44 }}>Search title</button>
-            <button className="secondaryButton" style={{ height: 44 }}>Date</button>
-            <button className="adminActionBtn" style={{ height: 44, padding: '0 24px' }}>Apply</button>
-          </div>
-          <button className="secondaryButton" style={{ height: 44 }}>Export</button>
-        </div>
+      <section className="cardSection" style={{ padding: 0, overflow: 'hidden', minHeight: 400 }}>
+        <TableFilterBar
+          searchText={searchText}
+          onSearchChange={setSearchText}
+          searchPlaceholder="Search title or user..."
+          onExport={() => {}}
+          hasActiveFilters={!!dateRange}
+          onClear={() => setDateRange(null)}
+        >
+          <DatePicker.RangePicker
+            style={{ height: 40, borderRadius: 8 }}
+            value={dateRange}
+            onChange={(dates) => setDateRange(dates)}
+          />
+        </TableFilterBar>
 
-        <Table 
-          columns={columns} 
-          dataSource={data} 
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-          style={{ background: 'transparent' }}
-          className="dataTable"
-        />
+        {filteredData.length > 0 ? (
+          <Table
+            columns={columns}
+            dataSource={filteredData.map(s => ({ ...s, key: s.id }))}
+            pagination={{ pageSize: 10 }}
+            className="dataTable"
+          />
+        ) : (
+          <EmptyState
+            title="No suggestions match"
+            description={data.length === 0 ? 'Suggestions from users will show here' : 'Try adjusting your search criteria'}
+            icon={suggestionsIcon}
+          />
+        )}
       </section>
+
+      <ConfirmationModal
+        isOpen={confirm.isOpen}
+        onClose={confirm.close}
+        onConfirm={confirm.onConfirm}
+        title={confirm.title}
+        message={confirm.message}
+        confirmLabel={confirm.confirmLabel}
+      />
     </div>
   );
 };

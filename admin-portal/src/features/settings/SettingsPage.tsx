@@ -1,43 +1,143 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useDataStore } from '@/shared/store/data.store';
+import PointConfigModal from './components/PointConfigModal';
+import GradeLevelModal from './components/GradeLevelModal';
+import ChangePasswordModal from './components/ChangePasswordModal';
+import { formatPoints } from '@/shared/utils/points';
 
-// Import Assets
 import editIcon from '@/assets/edit.svg';
+import styles from './SettingsPage.module.css';
 
 const SettingsPage: React.FC = () => {
+  const { settings, gradeLevels } = useDataStore();
+  const [isPointModalOpen, setIsPointModalOpen] = useState(false);
+  const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+
   return (
-    <div className="panel__content">
-      <div className="settingsStack" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24 }}>
-        <article className="settingCard">
-          <div className="settingCard__header">
-            <div>
-              <div className="settingCard__title">Point Configuration</div>
-              <div className="settingCard__desc">Adjust the conversion rate between Naira and Store Points.</div>
+    <div className={`panel__content ${styles.page}`}>
+      <h2 className={styles.heading}>Settings</h2>
+
+      <div className={styles.stack}>
+
+        {/* ── Point Configuration ── */}
+        <article className={styles.card}>
+          <div className={styles.cardHeader}>
+            <div className={styles.cardHeaderLeft}>
+              <span className={styles.cardIconWrap} aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                </svg>
+              </span>
+              <div className={styles.cardMeta}>
+                <p className={styles.cardTitle}>Point Configuration</p>
+                <p className={styles.cardDesc}>Adjust the conversion rate between Naira and Store Points.</p>
+              </div>
             </div>
-            <button className="miniIconButton">
+            <button
+              className={styles.cardEditBtn}
+              onClick={() => setIsPointModalOpen(true)}
+              aria-label="Edit point configuration"
+            >
               <img src={editIcon} alt="" />
             </button>
           </div>
 
-          <div className="settingCard__row settingCard__row--highlight">
-            <div className="settingCard__rowLabel">Amount per 1 Point</div>
-            <div className="settingCard__rowValue">₦-</div>
+          <div className={styles.dataRow}>
+            <span className={styles.dataLabel}>Amount per 1 Point</span>
+            <span className={styles.dataValue}>
+              {settings.nairaPerPoint > 0
+                ? `₦${settings.nairaPerPoint.toLocaleString()}`
+                : 'Not configured'}
+            </span>
           </div>
         </article>
 
-        <article className="settingCard">
-          <div className="settingCard__header">
-            <div>
-              <div className="settingCard__title">Grade Levels & Points</div>
-              <div className="settingCard__desc">Manage user grade levels and their associated point allocations.</div>
+        {/* ── Grade Levels ── */}
+        <article className={styles.card}>
+          <div className={styles.cardHeader}>
+            <div className={styles.cardHeaderLeft}>
+              <span className={styles.cardIconWrap} aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3l10 7-10 7L2 10l10-7z" />
+                  <path d="M2 17l10 7 10-7" />
+                  <path d="M2 12l10 7 10-7" />
+                </svg>
+              </span>
+              <div className={styles.cardMeta}>
+                <p className={styles.cardTitle}>Grade Levels & Points</p>
+                <p className={styles.cardDesc}>Manage user grade levels and their associated point allocations.</p>
+              </div>
             </div>
-            <button className="miniIconButton">
+            <button
+              className={styles.cardEditBtn}
+              onClick={() => setIsGradeModalOpen(true)}
+              aria-label="Edit grade levels"
+            >
               <img src={editIcon} alt="" />
             </button>
           </div>
 
-          <div className="settingCard__bigNumber">0</div>
+          <div className={styles.gradeCount}>
+            <span className={styles.gradeCountNumber}>{gradeLevels.length}</span>
+            <span className={styles.gradeCountLabel}>
+              {gradeLevels.length === 1 ? 'Grade Level' : 'Grade Levels'}
+            </span>
+          </div>
+
+          <div className={styles.gradeList}>
+            {gradeLevels.length === 0 ? (
+              <p className={styles.gradeEmpty}>No grade levels configured yet.</p>
+            ) : (
+              gradeLevels.map(grade => (
+                <div key={grade.id} className={styles.gradeRow}>
+                  <span className={styles.gradeRowName}>{grade.name}</span>
+                  <span className={styles.gradeRowPoints}>{formatPoints(grade.points)}</span>
+                </div>
+              ))
+            )}
+          </div>
         </article>
+
+        {/* ── Change Password ── */}
+        <article className={styles.card}>
+          <div className={styles.cardHeader}>
+            <div className={styles.cardHeaderLeft}>
+              <span className={styles.cardIconWrap} aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+              </span>
+              <div className={styles.cardMeta}>
+                <p className={styles.cardTitle}>Change Password</p>
+                <p className={styles.cardDesc}>Update your account password to keep your account secure.</p>
+              </div>
+            </div>
+            <button
+              className={styles.cardEditBtn}
+              onClick={() => setIsPasswordModalOpen(true)}
+              aria-label="Change password"
+            >
+              <img src={editIcon} alt="" />
+            </button>
+          </div>
+        </article>
+
       </div>
+
+      <PointConfigModal
+        open={isPointModalOpen}
+        onClose={() => setIsPointModalOpen(false)}
+      />
+      <GradeLevelModal
+        open={isGradeModalOpen}
+        onClose={() => setIsGradeModalOpen(false)}
+      />
+      <ChangePasswordModal
+        open={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+      />
     </div>
   );
 };

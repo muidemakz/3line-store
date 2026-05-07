@@ -15,9 +15,12 @@ import logoutIcon from '@/assets/logout.svg';
 import chevronRight from '@/assets/chevron-right.svg';
 import OnboardingModal from '@/features/onboarding/OnboardingModal';
 
+import { useThemeStore } from '@/shared/store/theme.store';
+
 export const MainLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [onboardingKey, setOnboardingKey] = useState(0);
+  const { theme, toggleTheme } = useThemeStore();
 
   const location = useLocation();
 
@@ -31,6 +34,7 @@ export const MainLayout: React.FC = () => {
   ];
 
   const getPageTitle = (pathname: string) => {
+    if (pathname === '/profile') return 'Profile';
     const item = menuItems.find(i => i.key === pathname);
     return item ? item.label : 'Admin Portal';
   };
@@ -48,7 +52,7 @@ export const MainLayout: React.FC = () => {
       {/* Sidebar */}
       <aside className={`sidebar ${mobileMenuOpen ? 'sidebar--open' : ''}`}>
         <div className="sidebar__logo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div className="sidebar__logoText">3Line Store</div>
+          <div className="sidebar__logoText">3line Store</div>
           <button 
             className="menuToggle" 
             style={{ border: 'none', background: 'transparent' }} 
@@ -74,7 +78,7 @@ export const MainLayout: React.FC = () => {
 
         <div className="sidebar__footer">
           <div className="sidebar__divider" />
-          <div className="sidebar__user">
+          <Link to="/profile" className="sidebar__user" onClick={() => setMobileMenuOpen(false)}>
             <div className="avatar">
               <div className="avatar__mask" />
               <div className="avatar__initials">OD</div>
@@ -83,7 +87,7 @@ export const MainLayout: React.FC = () => {
               <div className="userInfo__name">Omiran Dam...</div>
               <div className="userInfo__role">SuperAdmin</div>
             </div>
-          </div>
+          </Link>
           <Link 
             to="/login" 
             className="navItem navItem--danger"
@@ -111,9 +115,18 @@ export const MainLayout: React.FC = () => {
             </div>
           </div>
 
-          <div className="iconButton">
-            <img src={notificationBell} alt="" className="iconButton__icon" />
-            <img src={notificationDot} alt="" className="iconButton__dot" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div className="iconButton" onClick={toggleTheme} title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}>
+               {theme === 'light' ? (
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon--dark-optimized"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+               ) : (
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon--dark-optimized"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+               )}
+            </div>
+            <div className="iconButton">
+              <img src={notificationBell} alt="" className="iconButton__icon icon--dark-optimized" />
+              <img src={notificationDot} alt="" className="iconButton__dot" />
+            </div>
           </div>
         </header>
 
