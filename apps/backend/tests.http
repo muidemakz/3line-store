@@ -1,0 +1,53 @@
+@baseUrl = http://localhost:5000/api/v1
+@authToken = {{login.response.body.data.tokens.accessToken}}
+@refreshToken = {{login.response.body.data.tokens.refreshToken}}
+
+### 1. Health Check
+GET {{baseUrl}}/health
+
+### 2. Register New User
+# @name register
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@palliative.com",
+  "password": "Password123!",
+  "firstName": "John",
+  "lastName": "Doe",
+  "phone": "08012345678"
+}
+
+### 3. Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@palliative.com",
+  "password": "Password123!"
+}
+
+### 4. Get Current Profile (Protected)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{authToken}}
+
+### 5. Refresh Tokens
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### 6. Admin Only: List Users (Will fail for standard user)
+GET {{baseUrl}}/users
+Authorization: Bearer {{authToken}}
+
+### 7. Logout
+POST {{baseUrl}}/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}

@@ -1,0 +1,322 @@
+.header {
+  height: var(--header-height);
+  background: var(--color-white);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  flex-shrink: 0;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--color-gray-500);
+}
+
+.breadcrumbHome {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.breadcrumbSep {
+  color: var(--color-gray-400);
+}
+
+.breadcrumbCurrent {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ───── Combined session + points pill ───── */
+
+.sessionDropdownWrapper {
+  position: relative;
+}
+
+/* Outer light-blue pill — the clickable container */
+.outerPill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #d6e7ff;
+  border-radius: 28px;
+  padding: 4px 4px 4px 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.outerPill:hover {
+  background: #c5deff;
+}
+
+.sessionLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #0a1628;
+  white-space: nowrap;
+}
+
+.sessionChevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Inner dark navy gradient pill */
+.innerPill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(178.1deg, rgb(0, 0, 107) 11.3%, rgb(0, 0, 46) 82.2%);
+  border-radius: 24px;
+  padding: 10px 20px;
+}
+
+.pointsRow {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.pointsNumber {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.ptsSuffix {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1;
+}
+
+.pointsLabel {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1;
+}
+
+/* Days-left amber badge inside inner pill */
+.daysLeftBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #FFFAEB;
+  border: 1px solid #7A2E0E;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #DC6803;
+  white-space: nowrap;
+}
+
+/* Session dropdown */
+.sessionDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 180px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.sessionOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--color-text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+  gap: 12px;
+}
+
+.sessionOptionName {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sessionOptionPts {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-navy, #1a2e44);
+  background: var(--color-gray-100, #f3f4f6);
+  padding: 2px 7px;
+  border-radius: 99px;
+  letter-spacing: 0.02em;
+}
+
+.sessionOption:hover {
+  background: var(--color-gray-100);
+}
+
+.sessionOption.selected {
+  background: var(--color-gray-50);
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+/* Cart button */
+.cartBtn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-gray-600);
+  transition: background 0.15s;
+}
+
+.cartBtn:hover {
+  background: var(--color-gray-100);
+}
+
+.cartBadge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: var(--color-red);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  line-height: 1;
+  border: 2px solid var(--color-white);
+}
+
+/* ── Hamburger (hidden on desktop) ── */
+.hamburger {
+  display: none;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-text);
+  border-radius: var(--radius-md);
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.hamburger:hover {
+  background: var(--color-gray-100);
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+
+  .header {
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .breadcrumb {
+    font-size: 13px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .breadcrumbHome {
+    display: none;
+  }
+
+  .breadcrumbSep {
+    display: none;
+  }
+
+  /* Compact outer pill */
+  .outerPill {
+    padding: 3px 3px 3px 12px;
+    gap: 6px;
+  }
+
+  .sessionLabel {
+    font-size: 12px;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Hide days-left and points label text on small screens */
+  .daysLeftBadge {
+    display: none;
+  }
+
+  .pointsLabel {
+    display: none;
+  }
+
+  /* Compact inner pill */
+  .innerPill {
+    padding: 8px 12px;
+    gap: 4px;
+  }
+
+  .pointsNumber {
+    font-size: 14px;
+  }
+
+  .right {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  /* On very small screens, hide session name too — just show points */
+  .sessionLabel {
+    display: none;
+  }
+
+  .outerPill {
+    padding: 3px;
+  }
+}

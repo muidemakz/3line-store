@@ -1,0 +1,70 @@
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  z-index: 9999;
+  min-width: 280px;
+  max-width: 480px;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
+}
+
+/* Slide up & fade in */
+.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Slide down & fade out */
+.hide {
+  opacity: 0;
+  transform: translateX(-50%) translateY(16px);
+}
+
+.icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.message {
+  flex: 1;
+  line-height: 1.4;
+}
+
+/* ── Variants ─────────────────────────────────────────────── */
+.success {
+  background: #0f5132;
+  color: #d1fae5;
+}
+
+.success .icon {
+  color: #6ee7b7;
+}
+
+.info {
+  background: #1e3a5f;
+  color: #bfdbfe;
+}
+
+.info .icon {
+  color: #93c5fd;
+}
+
+.error {
+  background: #7f1d1d;
+  color: #fee2e2;
+}
+
+.error .icon {
+  color: #fca5a5;
+}
