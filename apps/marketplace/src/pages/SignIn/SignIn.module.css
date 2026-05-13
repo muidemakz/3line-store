@@ -1,0 +1,295 @@
+/* ─── Full page: deep navy ─── */
+.page {
+  min-height: 100vh;
+  width: 100%;
+  background: #060d1f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ─── Blob SVGs and gift decorations ─── */
+.blobs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.blobTopRight {
+  position: absolute;
+  top: -160px;
+  right: -160px;
+  width: 500px;
+  height: 500px;
+}
+
+.blobBottomLeft {
+  position: absolute;
+  bottom: -140px;
+  left: -120px;
+  width: 460px;
+  height: 460px;
+}
+
+.giftTopLeft {
+  position: absolute;
+  top: 90px;
+  left: 80px;
+  animation: floatY 4s ease-in-out infinite;
+}
+
+.giftMidLeft {
+  position: absolute;
+  top: 45%;
+  left: 60px;
+  animation: floatY 5s ease-in-out infinite 1s;
+}
+
+.giftMidRight {
+  position: absolute;
+  top: 38%;
+  right: 80px;
+  animation: floatY 4.5s ease-in-out infinite 0.5s;
+}
+
+.giftBottomRight {
+  position: absolute;
+  bottom: 100px;
+  right: 100px;
+  animation: floatY 6s ease-in-out infinite 1.5s;
+}
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+/* ─── Top bar: logo + get help ─── */
+.topBar {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px 40px 0;
+}
+
+.logo {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.logoMain {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.logoSub {
+  font-size: 15px;
+  font-style: italic;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.getHelp {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.getHelp:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ─── Center column: wavy + card ─── */
+.centerCol {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+  padding: 20px 24px 80px;
+  width: 100%;
+}
+
+/* Wavy blue line above card */
+.wavy {
+  width: 380px;
+  height: 36px;
+  margin-bottom: -4px;
+}
+
+/* ─── White card ─── */
+.card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 36px 40px 32px;
+  width: 100%;
+  max-width: 440px;
+  position: relative;
+}
+
+.heading {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0a1628;
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #111827;
+  outline: none;
+  transition: border-color 0.15s;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: #0a1628;
+}
+
+.input::placeholder {
+  color: #9ca3af;
+}
+
+/* Password field with show/hide button */
+.passwordWrapper {
+  position: relative;
+}
+
+.passwordWrapper .input {
+  padding-right: 60px;
+}
+
+.showBtn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #0a1628;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Remember me + forgot password row */
+.rememberRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.rememberLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #0a1628;
+  cursor: pointer;
+}
+
+.textLink {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #0a1628;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Sign in button */
+.submitBtn {
+  width: 100%;
+  padding: 13px;
+  background: #0a1628;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.submitBtn:hover {
+  opacity: 0.88;
+}
+
+.footerText {
+  text-align: center;
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 16px;
+}
+
+/* ─── Bottom welcome text ─── */
+.bottomWelcome {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.welcomeTo {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 400;
+}
+
+.shopName {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}

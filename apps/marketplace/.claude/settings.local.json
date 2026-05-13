@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__767bae6c-e94b-4bff-bce0-6f9badc902bb__get_design_context",
+      "mcp__767bae6c-e94b-4bff-bce0-6f9badc902bb__get_metadata",
+      "mcp__767bae6c-e94b-4bff-bce0-6f9badc902bb__get_screenshot",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "mcp__Claude_in_Chrome__browser_batch",
+      "Bash(cd \"/c/Users/Excellentm/Documents/Palliative Shopping\" && ls)",
+      "Bash(node -e ' *)",
+      "mcp__Claude_Preview__preview_start"
+    ]
+  }
+}
