@@ -12,6 +12,6 @@ This project implements a dashboard based on Figma designs.
 
 ## Files
 
-- `index.html`: page markup
+- `index.html`: page markup 
 - `styles.css`: design tokens + layout/styles
 ```
