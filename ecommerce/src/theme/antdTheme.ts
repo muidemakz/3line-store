@@ -6,7 +6,7 @@ import { radius } from '@/theme/tokens/radius';
 export const appTheme: ThemeConfig = {
   token: {
     fontFamily,
-    colorPrimary: colors.primary[500],
+    colorPrimary: semanticColors.actionPrimary,
     colorInfo: colors.info[500],
     colorSuccess: colors.success[500],
     colorWarning: colors.warning[500],
@@ -34,28 +34,30 @@ export const appTheme: ThemeConfig = {
       controlHeight: 40,
       controlHeightSM: 32,
       controlHeightLG: 44,
-      fontWeight: 500,
+      fontWeight: 600,
       paddingInline: 16,
-      primaryShadow: 'none'
+      primaryShadow: 'none',
+      defaultColor: semanticColors.textSecondary,
+      defaultBorderColor: semanticColors.borderDefault
     },
     Input: {
-      borderRadius: radius.md,
-      controlHeight: 40,
-      controlHeightSM: 32,
-      paddingInline: 12,
-      activeBorderColor: colors.primary[500],
-      hoverBorderColor: colors.primary[500]
+      borderRadius: radius.lg,
+      controlHeight: 48,
+      controlHeightSM: 40,
+      paddingInline: 16,
+      activeBorderColor: semanticColors.accent,
+      hoverBorderColor: semanticColors.accent
     },
     Checkbox: {
-      colorPrimary: colors.primary[700],
-      colorPrimaryHover: colors.primary[600],
+      colorPrimary: semanticColors.actionPrimary,
+      colorPrimaryHover: semanticColors.actionPrimaryHover,
       borderRadiusSM: radius.sm
     },
     Select: {
       borderRadius: radius.md,
       controlHeight: 40,
-      activeBorderColor: colors.primary[500],
-      hoverBorderColor: colors.primary[500]
+      activeBorderColor: semanticColors.accent,
+      hoverBorderColor: semanticColors.accent
     },
     Card: {
       borderRadiusLG: radius.lg
@@ -72,11 +74,14 @@ export const appTheme: ThemeConfig = {
     Menu: {
       itemBorderRadius: radius.md,
       itemSelectedBg: colors.primary[50],
-      itemSelectedColor: colors.primary[700]
+      itemSelectedColor: semanticColors.accent
     },
     Table: {
       headerBg: semanticColors.bgSurface,
       rowHoverBg: colors.neutral[50]
+    },
+    Tag: {
+      borderRadiusSM: radius.sm
     }
   }
 };
