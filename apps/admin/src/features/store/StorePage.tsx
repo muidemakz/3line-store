@@ -260,7 +260,7 @@ const StorePage: React.FC = () => {
     onRemove,
   }: {
     preview: string | null;
-    fileRef: React.RefObject<HTMLInputElement>;
+    fileRef: React.RefObject<HTMLInputElement | null>;
     onChangeFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onRemove: () => void;
   }) => (
