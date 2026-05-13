@@ -9,7 +9,6 @@ import { resolveItemMeta } from '@/shared/utils/items';
 import ConfirmationModal from '@/shared/components/modals/ConfirmationModal';
 import EmptyState from '@/components/common/EmptyState';
 
-import orderIcon from '@/assets/sidebar-suggestions.svg';
 
 interface LineItem {
   key: string;
