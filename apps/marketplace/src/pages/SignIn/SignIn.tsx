@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useApp } from '../../context/AppContext'
+import { authService } from '../../shared/api/auth'
 import styles from './SignIn.module.css'
 
 export default function SignIn() {
@@ -12,6 +13,8 @@ export default function SignIn() {
   const [forgotEmail, setForgotEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [forgotSuccess, setForgotSuccess] = useState(false)
+  const [forgotError, setForgotError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,6 +26,20 @@ export default function SignIn() {
       // Login successful - context will handle navigation
     } catch (err: any) {
       setError(err.message || 'Invalid email or password')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleForgotSubmit = async () => {
+    if (!forgotEmail.trim()) { setForgotError('Please enter your email.'); return }
+    setIsLoading(true)
+    setForgotError('')
+    try {
+      await authService.forgotPassword(forgotEmail.trim())
+      setForgotSuccess(true)
+    } catch (err: any) {
+      setForgotError(err.message || 'Something went wrong. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -40,23 +57,42 @@ export default function SignIn() {
           <WavyLine />
           <div className={styles.card}>
             <h1 className={styles.heading}>Forgot Password</h1>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Email</label>
-              <input
-                className={styles.input}
-                type="email"
-                placeholder="adioshowglass@3line.com"
-                value={forgotEmail}
-                onChange={e => setForgotEmail(e.target.value)}
-              />
-            </div>
-            <button className={styles.submitBtn} onClick={() => setView('signin')}>
-              Submit
-            </button>
-            <p className={styles.footerText}>
-              I remember my password?{' '}
-              <button className={styles.textLink} onClick={() => setView('signin')}>Sign In</button>
-            </p>
+            {forgotSuccess ? (
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ color: '#16a34a', fontSize: '15px', marginBottom: '16px' }}>
+                  ✅ Reset link sent! Check your email.
+                </p>
+                <button className={styles.textLink} onClick={() => { setView('signin'); setForgotSuccess(false); setForgotEmail('') }}>
+                  Back to Sign In
+                </button>
+              </div>
+            ) : (
+              <>
+                {forgotError && (
+                  <div style={{ padding: '10px', marginBottom: '12px', backgroundColor: '#fee', color: '#c33', borderRadius: '8px', fontSize: '14px' }}>
+                    {forgotError}
+                  </div>
+                )}
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Email</label>
+                  <input
+                    className={styles.input}
+                    type="email"
+                    placeholder="you@3line.com"
+                    value={forgotEmail}
+                    onChange={e => setForgotEmail(e.target.value)}
+                  />
+                </div>
+                <button className={styles.submitBtn} onClick={handleForgotSubmit} disabled={isLoading}
+                  style={{ opacity: isLoading ? 0.6 : 1 }}>
+                  {isLoading ? 'Sending...' : 'Send Reset Link'}
+                </button>
+                <p className={styles.footerText}>
+                  I remember my password?{' '}
+                  <button className={styles.textLink} onClick={() => setView('signin')}>Sign In</button>
+                </p>
+              </>
+            )}
           </div>
         </div>
         <BottomWelcome />

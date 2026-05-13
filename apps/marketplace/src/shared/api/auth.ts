@@ -92,6 +92,13 @@ export const authService = {
   },
 
   /**
+   * Request a password reset email.
+   */
+  async forgotPassword(email: string): Promise<{ message: string; resetUrl?: string }> {
+    return apiClient.post('/auth/forgot-password', { email });
+  },
+
+  /**
    * Check if the user is currently authenticated
    * (token exists in localStorage).
    */
