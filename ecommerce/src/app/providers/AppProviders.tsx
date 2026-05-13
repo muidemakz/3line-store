@@ -15,8 +15,10 @@ export function AppProviders({ children }: PropsWithChildren) {
           <ToastContainer
             position="top-right"
             autoClose={4000}
+            hideProgressBar={false}
             newestOnTop
             closeOnClick
+            rtl={false}
             pauseOnFocusLoss
             draggable
             pauseOnHover

@@ -158,7 +158,7 @@
 }
 
 .auth-form .ant-form-item-label > label {
-  color: #5f6677;
+  color: var(--auth-label);
   font-size: 14px;
   line-height: 22px;
   font-weight: 500;
@@ -184,7 +184,7 @@
 .auth-password-toggle {
   border: 0;
   background: transparent;
-  color: #0b0858;
+  color: var(--auth-password-toggle);
   font-size: 14px;
   line-height: 20px;
   font-weight: 600;
@@ -198,7 +198,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  color: #151729;
+  color: var(--auth-text);
 }
 
 .auth-form__meta .ant-checkbox-wrapper {
@@ -209,7 +209,7 @@
 }
 
 .auth-form__meta .auth-link {
-  color: #0b0858;
+  color: var(--auth-link-ink);
   font-weight: 700;
 }
 

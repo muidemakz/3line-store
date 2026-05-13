@@ -15,8 +15,8 @@ export function AuthShell({ children }: PropsWithChildren) {
       <div className="auth-screen__content">
         <header className="auth-header">
           <div className="auth-brand">
-            <span className="auth-brand__title">3line Store</span>
-            <span className="auth-brand__sub">Employee</span>
+            <span className="auth-brand__title">Checkitout</span>
+            <span className="auth-brand__sub">Customer</span>
           </div>
           <a className="auth-help-link" href="mailto:help@3linestore.com">
             Get Help
@@ -30,8 +30,8 @@ export function AuthShell({ children }: PropsWithChildren) {
         {children}
 
         <footer className="auth-footer">
-          <span>Welcome to</span>
-          <strong>3line Palliative Shop</strong>
+          <span>3Line Store</span>
+          <strong>Checkitout</strong>
         </footer>
       </div>
     </div>
