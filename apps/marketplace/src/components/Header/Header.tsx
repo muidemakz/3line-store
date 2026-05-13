@@ -74,7 +74,7 @@ export default function Header({ onMenuOpen }: HeaderProps) {
         <div className={styles.sessionDropdownWrapper} ref={dropdownRef}>
           <div className={styles.outerPill} onClick={() => setSessionOpen(v => !v)}>
             <span className={styles.sessionLabel}>
-              {activeSession?.label || activeSession?.name || 'No Session'}
+              {activeSession?.name || 'No Session'}
               <ChevronDownIcon />
             </span>
 
