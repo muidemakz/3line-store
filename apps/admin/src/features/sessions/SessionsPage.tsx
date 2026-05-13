@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, Dropdown, Modal, Form, Input, DatePicker, Tag } from 'antd';
+import { Table, Dropdown, Modal, Form, Input, DatePicker } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
@@ -217,7 +217,7 @@ const SessionsPage: React.FC = () => {
     </header>
   );
 
-  const DateFields = ({ endAfter }: { endAfter?: string }) => (
+  const DateFields = (_props: { endAfter?: string }) => (
     <div className="modalGrid2">
       <div className="field">
         <Form.Item label={<span className="field__label">Start Date</span>} name="startDate" rules={[{ required: true, message: 'Required' }]}>
